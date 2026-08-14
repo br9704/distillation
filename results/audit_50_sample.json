@@ -1,0 +1,352 @@
+[
+ {
+  "n": 1,
+  "id": "93680020434ef64d",
+  "teacher": "consumer",
+  "outlet": "npr.org",
+  "headline": "Here's how gyms, salons and ice cream are changing America's Main Streets"
+ },
+ {
+  "n": 2,
+  "id": "76cba21934a1aafc",
+  "teacher": "consumer",
+  "outlet": "wired.com",
+  "headline": "Shark Promo Codes for August 2026"
+ },
+ {
+  "n": 3,
+  "id": "fa40d382a12de644",
+  "teacher": "consumer",
+  "outlet": "nytimes.com",
+  "headline": "On These Motorcycles, the Thrill Is Truly Electric"
+ },
+ {
+  "n": 4,
+  "id": "dfab02b4ebb649a1",
+  "teacher": "consumer",
+  "outlet": "theguardian.com",
+  "headline": "Burnham vows crackdown on \u2018rip-off\u2019 business practices to ease cost of living"
+ },
+ {
+  "n": 5,
+  "id": "550bdee905927304",
+  "teacher": "consumer",
+  "outlet": "9to5mac.com",
+  "headline": "Apple extends 2026 Back to School deals on Macs and iPads until September 24"
+ },
+ {
+  "n": 6,
+  "id": "247692025db7fbc5",
+  "teacher": "consumer",
+  "outlet": "nbcnews.com",
+  "headline": "The best derm-approved spray deodorants in 2026"
+ },
+ {
+  "n": 7,
+  "id": "e549b09dda29069b",
+  "teacher": "consumer",
+  "outlet": "cnn.com",
+  "headline": "Flying a sports car with wings"
+ },
+ {
+  "n": 8,
+  "id": "919f2bdabb08b278",
+  "teacher": "entertainment",
+  "outlet": "foxnews.com",
+  "headline": "Kaia Gerber owns 'nepo baby' status while questioning other celebrity kids: 'Show me why you deserve this job'"
+ },
+ {
+  "n": 9,
+  "id": "d280abf9b892dbce",
+  "teacher": "entertainment",
+  "outlet": "aljazeera.com",
+  "headline": "The Gambian women turning grief into song"
+ },
+ {
+  "n": 10,
+  "id": "da0e66e4dabd718c",
+  "teacher": "entertainment",
+  "outlet": "deadline.com",
+  "headline": "\u2018Just One Day\u2019 YA Drama Starring Kathryn Newton Moves To Hulu For Development"
+ },
+ {
+  "n": 11,
+  "id": "b8d245a4aa1b980f",
+  "teacher": "entertainment",
+  "outlet": "foxnews.com",
+  "headline": "'Fire Country' star Diane Farr reveals where she now lives after leaving Los Angeles behind"
+ },
+ {
+  "n": 12,
+  "id": "5c79361b9905d88e",
+  "teacher": "entertainment",
+  "outlet": "9to5mac.com",
+  "headline": "Eddy Cue said the thing we wanted to hear on future Ted Lasso seasons"
+ },
+ {
+  "n": 13,
+  "id": "b23669b374a08dea",
+  "teacher": "entertainment",
+  "outlet": "cbsnews.com",
+  "headline": "Becky G opens up about carrying \"resentment,\" pressure as a child to be family's breadwinner"
+ },
+ {
+  "n": 14,
+  "id": "7eee57ea89fb6285",
+  "teacher": "entertainment",
+  "outlet": "deadline.com",
+  "headline": "\u2018DTF St. Louis\u2019 Creator Steve Conrad On Tapping Into The Exotica & Underbelly Of The Midwest \u2013 Crew Call Podcast"
+ },
+ {
+  "n": 15,
+  "id": "730e353b0539b354",
+  "teacher": "finance",
+  "outlet": "nytimes.com",
+  "headline": "July CPI Report Is Expected to Show Falling Energy Prices"
+ },
+ {
+  "n": 16,
+  "id": "7218637cc6e5bd4a",
+  "teacher": "finance",
+  "outlet": "theguardian.com",
+  "headline": "Tesla paid Elon Musk 2.5m times more as CEO than its average worker in 2025"
+ },
+ {
+  "n": 17,
+  "id": "4dfc3d02ce0c86e6",
+  "teacher": "finance",
+  "outlet": "fool.com",
+  "headline": "Is Bitcoin Headed for a Breakdown or a Breakout? The Historical Evidence Is Just Too Overwhelming to Ignore."
+ },
+ {
+  "n": 18,
+  "id": "990279b8b2ea8649",
+  "teacher": "finance",
+  "outlet": "scmp.com",
+  "headline": "Transit giant CRRC sets down marker in Hong Kong as sales pitch to overseas cities"
+ },
+ {
+  "n": 19,
+  "id": "42f046b9a9e2eea4",
+  "teacher": "finance",
+  "outlet": "fool.com",
+  "headline": "This Tech Stock Is 1 of the Most Shorted Stocks of 2026: Is Now the Time to Buy?"
+ },
+ {
+  "n": 20,
+  "id": "76095bf9c344df6c",
+  "teacher": "finance",
+  "outlet": "barrons.com",
+  "headline": "Goldman Sachs Is Doubling Down on Investor Hunger for \u2018Boomer Candy\u2019"
+ },
+ {
+  "n": 21,
+  "id": "916c7a62ce7c534e",
+  "teacher": "finance",
+  "outlet": "foxnews.com",
+  "headline": "Fox News AI Newsletter: One year until AI market busts, investor says"
+ },
+ {
+  "n": 22,
+  "id": "6d9f0249bc157a0d",
+  "teacher": "general",
+  "outlet": "foxnews.com",
+  "headline": "Mamdani\u2019s luxury-home tax gets new life as appeals court lifts roadblock in homeowner fight"
+ },
+ {
+  "n": 23,
+  "id": "5fee4584e29d2acf",
+  "teacher": "general",
+  "outlet": "propublica.org",
+  "headline": "Is There Anyone Who Can Respond to My FOIA Requests? Anyone?"
+ },
+ {
+  "n": 24,
+  "id": "5c810c2943269a64",
+  "teacher": "general",
+  "outlet": "thehill.com",
+  "headline": "DOJ announces indictments in sham marriages case"
+ },
+ {
+  "n": 25,
+  "id": "e84963d49e5c176e",
+  "teacher": "general",
+  "outlet": "theatlantic.com",
+  "headline": "Trump\u2019s New Plan to Get His Name Back on the Kennedy Center"
+ },
+ {
+  "n": 26,
+  "id": "5784b7d3287fc91c",
+  "teacher": "general",
+  "outlet": "theguardian.com",
+  "headline": "The US tried to stop cartel money-laundering. It devastated mom-and-pop businesses instead"
+ },
+ {
+  "n": 27,
+  "id": "3009047a944fd109",
+  "teacher": "general",
+  "outlet": "foxnews.com",
+  "headline": "How a noncitizen suspected killer got caught and released by Newsom-appointed judge: timeline"
+ },
+ {
+  "n": 28,
+  "id": "df7276648452e377",
+  "teacher": "general",
+  "outlet": "washingtonpost.com",
+  "headline": "Graham Platner to speak at Maine rally in return to public eye"
+ },
+ {
+  "n": 29,
+  "id": "22b6252ef1c452d8",
+  "teacher": "geopolitics",
+  "outlet": "washingtonpost.com",
+  "headline": "Concerned about Trump\u2019s ballroom project, Senate Democrats seek audit"
+ },
+ {
+  "n": 30,
+  "id": "3e405faa4acd9bb1",
+  "teacher": "geopolitics",
+  "outlet": "thehill.com",
+  "headline": "O\u2019Reilly: \u2018I don\u2019t believe the American public are going to buy the socialist communist lunacy\u2019"
+ },
+ {
+  "n": 31,
+  "id": "afbb55f4a468dce8",
+  "teacher": "geopolitics",
+  "outlet": "economist.com",
+  "headline": "Cover Story newsletter: The most powerful woman in the world"
+ },
+ {
+  "n": 32,
+  "id": "24150e0bdab36710",
+  "teacher": "geopolitics",
+  "outlet": "nytimes.com",
+  "headline": "U.S.S. Abraham Lincoln Has Been Deployed for Months, Prompting Concerns"
+ },
+ {
+  "n": 33,
+  "id": "3ac7197c2214099e",
+  "teacher": "geopolitics",
+  "outlet": "latimes.com",
+  "headline": "Barabak: Democrats are at each other's throats \u2014 this time over the 2028 calendar"
+ },
+ {
+  "n": 34,
+  "id": "5700821eddbad69c",
+  "teacher": "geopolitics",
+  "outlet": "latimes.com",
+  "headline": "War escalates, oil prices surge as Iran-backed Houthis strike Saudi tankers in Red Sea"
+ },
+ {
+  "n": 35,
+  "id": "06162a17f871b2e5",
+  "teacher": "geopolitics",
+  "outlet": "thehill.com",
+  "headline": "Warren presses RFK Jr. on Trump ties to lettuce distributor"
+ },
+ {
+  "n": 36,
+  "id": "fb760c107f3ba221",
+  "teacher": "science",
+  "outlet": "sciencedaily.com",
+  "headline": "Why Jupiter has several giant moons but Saturn has only Titan"
+ },
+ {
+  "n": 37,
+  "id": "dcc710816f6a1670",
+  "teacher": "science",
+  "outlet": "sciencedaily.com",
+  "headline": "1 in 5 people may carry this hidden genetic heart risk"
+ },
+ {
+  "n": 38,
+  "id": "b3e6aebc3aa3f0ce",
+  "teacher": "science",
+  "outlet": "bbc.com",
+  "headline": "What does hot weather do to the body?"
+ },
+ {
+  "n": 39,
+  "id": "1979c88b1cd72f05",
+  "teacher": "science",
+  "outlet": "foxnews.com",
+  "headline": "NASA announces three new Moon missions as agency races to build permanent lunar base by end of 2026"
+ },
+ {
+  "n": 40,
+  "id": "bca73d47f6ffb145",
+  "teacher": "science",
+  "outlet": "bbc.com",
+  "headline": "Initiatives aim to help breastfeeding difficulties"
+ },
+ {
+  "n": 41,
+  "id": "14f607bed747c894",
+  "teacher": "science",
+  "outlet": "nature.com",
+  "headline": "Dataset artefacts can partially drive the measured decline in disruption"
+ },
+ {
+  "n": 42,
+  "id": "45b14c2ce6fcfa78",
+  "teacher": "science",
+  "outlet": "bbc.com",
+  "headline": "Eclipse warning: The key signs you may have damaged your eyes"
+ },
+ {
+  "n": 43,
+  "id": "f1cb2863ee05cf5b",
+  "teacher": "sports",
+  "outlet": "theguardian.com",
+  "headline": "Football Daily | Brian Madjo and the tendency to lump expectations on young shoulders"
+ },
+ {
+  "n": 44,
+  "id": "c5698690689e1838",
+  "teacher": "sports",
+  "outlet": "theguardian.com",
+  "headline": "The Spin | Tradition of Women\u2019s Cricket Week continues \u2013 and is still celebrated 100 years on"
+ },
+ {
+  "n": 45,
+  "id": "754496c344db76fb",
+  "teacher": "sports",
+  "outlet": "espn.com",
+  "headline": "The 10 storylines that will shape the rest of this MLB season"
+ },
+ {
+  "n": 46,
+  "id": "d59026d6655fc4e0",
+  "teacher": "sports",
+  "outlet": "espn.com",
+  "headline": "Joe Montana Super Bowl XXIV jersey fetches record $1.5 million price"
+ },
+ {
+  "n": 47,
+  "id": "c2b7549d4a789b52",
+  "teacher": "sports",
+  "outlet": "cbssports.com",
+  "headline": "HQ PM Newsletter 8/13/2026"
+ },
+ {
+  "n": 48,
+  "id": "149844cdec2fd377",
+  "teacher": "sports",
+  "outlet": "theguardian.com",
+  "headline": "High-flying Sirius chase shock Allsvenskan title despite losing \u2018best player in league\u2019"
+ },
+ {
+  "n": 49,
+  "id": "564f0b83666654f5",
+  "teacher": "sports",
+  "outlet": "bbc.com",
+  "headline": "Man City's Reijnders set for \u00a352m Saudi move"
+ },
+ {
+  "n": 50,
+  "id": "e0f3cee3b824c175",
+  "teacher": "tech",
+  "outlet": "arstechnica.com",
+  "headline": "Terabytes of credentials leaked in massive supply-chain attack"
+ }
+]

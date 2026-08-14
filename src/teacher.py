@@ -109,7 +109,19 @@ def label_one(client: httpx.Client, headline: str, outlet: str, model: str) -> t
             "stream": False,
             "think": False,
             "format": TOPIC_SCHEMA,
-            "options": {"temperature": 0, "num_predict": 24, "seed": 20260814},
+            "options": {
+                "temperature": 0,
+                "num_predict": 24,
+                "seed": 20260814,
+                # Ollama defaults this model to a 32,768-token context. Our prompts are
+                # ~250 tokens, so that KV cache is ~130x more than the task needs — and on
+                # a 48 GB machine already holding 22 GB of weights it drove the system into
+                # swap hard enough to eat the disk (12 GB -> 4 GB free during the run).
+                # 2048 is still 8x headroom over the longest prompt. Output is unaffected:
+                # a prompt that fits identically in both windows decodes identically at
+                # temperature 0, which the temp-0 determinism probe already established.
+                "num_ctx": 2048,
+            },
         }
         started = time.perf_counter()
         try:
