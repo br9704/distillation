@@ -664,3 +664,36 @@ a worse teacher is a worse project. Deleting the two pre-existing Ollama models
 (`llama3:8b`, `dolphin-llama3:8b`, 9.6 GB together) would free plenty, but they are Bruno's
 and this project does not delete a user's models to make room for itself. If the disk does
 become binding, that is the option to raise with him rather than act on.
+
+**A3 · 2026-08-15 · The student gets a lean prompt. This reverses the S5 decision.**
+
+S5 recorded that the student would keep the teacher's full system prompt, reasoning that
+holding the prompt constant kept the quality comparison clean. **Measurement showed that was
+wrong on two counts.**
+
+*Runtime.* The first training run managed fewer than 25 iterations in 13 minutes, projecting
+to roughly **ten hours** against the brief's one-hour cap. Tokenising the two shapes explains
+it exactly:
+
+| | tokens per example |
+|---|---|
+| full prompt (system + user + answer) | **299** |
+| lean prompt (user + answer) | **32** |
+| the system block alone | 262 |
+
+**88% of every training example was the same instruction block, repeated 3,046 times.** With
+lean prompts the same run does 0.30 it/s — about **70 minutes**, inside budget.
+
+*Design.* The stronger objection is that the original reasoning was simply backwards. A
+distilled student is supposed to stop needing the instructions — that is what "the task is in
+the weights" means. Making it re-read 262 tokens of class definitions on every call would
+have **understated the distillation win** in the one place the project is trying to measure
+it: input tokens per request, which drive both cost and prefill latency.
+
+*What this does and does not change.* Both arms still see exactly the same **information**
+(outlet + headline) and exactly the same held-out 500. Nothing about the quality comparison
+moves. What moves is that the student's per-call input drops 9.3×, and that belongs in the
+S7 cost table as a result rather than being suppressed as a confound.
+
+The shape lives in one function — `student_messages()` in `src/prepare_training.py` — which
+`src/evaluate.py` imports, so training and evaluation cannot drift apart.

@@ -26,9 +26,9 @@ lora_parameters:
 num_layers: 16
 
 batch_size: 8
-iters: 1200          # ~3 epochs over 3,046 examples at batch 8 (3046/8 = 381 steps/epoch)
+iters: 1200          # ~3.2 epochs over 3,046 examples at batch 8 (381 steps/epoch)
 learning_rate: 1e-5
-max_seq_length: 640  # the longest rendered prompt is ~430 tokens; this is comfortable headroom
+max_seq_length: 128  # lean prompts render to ~32 tokens (A3); ample headroom for long headlines
 
 # Train on the answer only. Without this the model spends capacity learning to regenerate
 # a system prompt it will always be given.

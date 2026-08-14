@@ -2,10 +2,12 @@
 
 Writes `data/mlx/{train,valid,test}.jsonl` in chat format.
 
-**The student sees the same prompt shape the teacher saw.** Same system prompt, same
-`Outlet:/Headline:` user turn, from the same frozen `PROMPT_VERSION`. If the two differed,
-the comparison would be measuring prompt engineering rather than distillation, and the whole
-result would be uninterpretable.
+**The student gets a LEAN prompt — the user turn only, no system block.** The teacher needs
+262 tokens of class definitions because it works zero-shot; the student has the task in its
+weights. 299 tokens -> 32, a 9.3x reduction per call. See AMENDMENT A3: this reverses the S5
+decision to hold the prompt constant, which cost ~9x in training time and understated the
+distillation win. Both arms still see identical *information* and identical held-out
+examples, so the quality comparison is untouched.
 
 The assistant turn is the bare class name rather than the teacher's `{"topic": ...}` JSON.
 The teacher needed that envelope because constrained decoding required a schema; the student
@@ -30,20 +32,33 @@ from pathlib import Path
 
 from src.schema import UNPARSEABLE, is_valid_class
 from src.store import DATA, read_jsonl, write_jsonl
-from src.teacher import PROMPT_VERSION, SYSTEM_PROMPT, build_user_prompt
+from src.teacher import PROMPT_VERSION, build_user_prompt
 
 VALID_FRACTION = 0.05
 SEED = 20260814
 
 
+def student_messages(example: dict) -> list[dict]:
+    """The student's prompt: the user turn only, no system block.
+
+    **This is the shape the eval harness must use too.** It is imported by
+    `src/evaluate.py` precisely so the two cannot drift.
+
+    The teacher needs 262 tokens of class definitions because it is working zero-shot. The
+    student has the task in its weights and needs none of it: 299 tokens → **32**, a 9.3×
+    reduction on every single call. See AMENDMENT A3 — this replaces the S5 decision to hold
+    the prompt constant across arms.
+
+    Both arms still see exactly the same *information* (outlet + headline) and the same
+    held-out examples, so the quality comparison is unaffected. What changes is that the
+    student no longer pays to re-read instructions it has already learned, which is the
+    distillation win rather than a confound.
+    """
+    return [{"role": "user", "content": build_user_prompt(example["headline"], example["outlet"])}]
+
+
 def to_chat(example: dict, label: str) -> dict:
-    return {
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": build_user_prompt(example["headline"], example["outlet"])},
-            {"role": "assistant", "content": label},
-        ]
-    }
+    return {"messages": [*student_messages(example), {"role": "assistant", "content": label}]}
 
 
 def join(examples_path: Path, labels_path: Path) -> list[tuple[dict, str]]:
