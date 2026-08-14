@@ -346,3 +346,46 @@ with `aethereum status`.)
 >   training set where the incumbent yields rubble.
 > - Evidence: `data/train_labels.jsonl`, `data/heldout_labels.jsonl`,
 >   `data/teacher_latency.jsonl`, `results/audit_50.md`, `charts/label_distribution.png`.
+
+---
+
+## S5 — Base-model architecture probe
+
+**2026-08-15 · `share_intent`**
+> Probing whether mlx-lm can actually LoRA-tune Qwen3.5-4B on 20 examples before committing
+> the training sprint to it.
+
+**2026-08-15 · `record_decision` — base model is `Qwen/Qwen3.5-4B`, no fallback used**
+> Via `mlx-community/Qwen3.5-4B-bf16` @ `491fdc7c087ba7fb48adcb1253f8e76d011db783`.
+> **Why:** it is option 1 on the ladder and it passed. The model loads (4.21B params,
+> multimodal wrapper included), LoRA attaches at 0.096% trainable (4.058M of 4,205.75M),
+> loss fell 2.594 -> 0.051 over 20 iterations, peak memory 18.6 GB. The three fallbacks stay
+> documented but unused.
+
+**2026-08-15 · `record_decision` — `enable_thinking=False` is MANDATORY at inference**
+> The eval harness must pass it to `apply_chat_template`. This is not a preference.
+> **Why:** Qwen3.5-4B is a reasoning model whose chat template opens a `<think>` block by
+> default. mlx-lm renders *training* examples from the full conversation, producing a
+> **closed** block — `...assistant\n<think>\n\n</think>\n\nfinance<|im_end|>`. A plain
+> `add_generation_prompt=True` at inference produces an **open** `<think>\n` instead, and the
+> model reasons rather than answering. Measured: without the flag **0/5 valid classes**
+> (every output began "Thinking Process:"); with it, **5/5 valid and 5/5 correct**. Without
+> this decision the student would have scored near zero in S7 and the obvious reading —
+> "the fine-tune failed" — would have been entirely wrong.
+
+**2026-08-15 · `record_decision` — student keeps the teacher's full system prompt**
+> Training examples carry the same system prompt, same `Outlet:/Headline:` user turn, same
+> frozen `PROMPT_VERSION` the teacher saw.
+> **Why:** a shorter student prompt would be a legitimate further optimisation and would
+> improve the cost story, but changing the prompt between arms would confound quality with
+> prompt engineering. Holding it constant keeps the quality comparison clean; the shorter
+> prompt is noted in S7's cost section as available headroom rather than taken here.
+
+**2026-08-15 · `record_verification` — S5 gate**
+> - Base model chosen and revision pinned — PASS
+> - Smoke fine-tune completes, loss decreases 2.594 -> 0.051 — PASS
+> - Adapter loads standalone and produces valid classes — PASS (**5/5 valid, 5/5 correct**)
+> - Training data built: 3,046 train / 160 valid / 500 test, smallest class `consumer` = 182,
+>   leakage assertion passes (500 held-out ids absent from train+valid) — PASS
+> - `configs/lora.yaml` committed, fully specifying the S6 run — PASS
+> - Evidence: `/tmp/smoke_adapter/adapters.safetensors`, `configs/lora.yaml`, S5 commit.

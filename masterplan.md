@@ -1,6 +1,6 @@
 # masterplan.md — distillation
 
-> **Current sprint: S5 — Base-model architecture probe** _(S0–S4 closed 2026-08-14)_
+> **Current sprint: S6 — Train** _(S0–S5 closed)_
 >
 > Work only the active sprint. Mark tasks live: `[ ]` not started · `[~]` in progress ·
 > `[x]` complete · `[⏭]` deferred (one-line reason). **Never delete or rewrite content in
@@ -449,21 +449,52 @@ that `mlx_lm.lora` handles the arch.
 > The fallback ladder below stays in place — a registered architecture is not the same as a
 > working LoRA run — but option 1 is now the expected outcome rather than a hope.
 
-- [ ] 20-example smoke fine-tune. Success = the run completes, loss decreases, the adapter
+- [x] 20-example smoke fine-tune. Success = the run completes, loss decreases, the adapter
       loads, and 5 predictions parse to valid classes.
-- [ ] Fallback ladder — take the first that passes, `record_decision` on the choice:
-  1. `Qwen/Qwen3.5-4B` (preferred — matches the brief)
-  2. `Qwen/Qwen3.5-2B` (same family, smaller)
-  3. `Qwen/Qwen3-4B-Instruct-2507` (**standard text-only arch — the safe option**)
-  4. `HuggingFaceTB/SmolLM3-3B`
-- [ ] Pin the exact revision SHA of whichever wins
-- [ ] If the winner is not #1, note in the README why — the reason is interesting, not embarrassing
+      → **loss 2.594 → 0.051 · adapter saved · 5/5 valid AND 5/5 correct**
+- [x] Fallback ladder — take the first that passes, `record_decision` on the choice:
+  1. **`Qwen/Qwen3.5-4B` — WINNER, no fallback needed** (via `mlx-community/Qwen3.5-4B-bf16`)
+  2. `Qwen/Qwen3.5-2B` (unused)
+  3. `Qwen/Qwen3-4B-Instruct-2507` (unused)
+  4. `HuggingFaceTB/SmolLM3-3B` (unused)
+- [x] Pin the exact revision SHA of whichever wins
+      → `mlx-community/Qwen3.5-4B-bf16` @ `491fdc7c087ba7fb48adcb1253f8e76d011db783`
+- [x] If the winner is not #1, note in the README why — n/a, #1 won
+- [x] `src/prepare_training.py` — chat-format data with a leakage assertion
+- [x] `configs/lora.yaml` — the S6 run, fully specified and committed
 
 **Acceptance:** one base model chosen, revision pinned, smoke run reproducible from a
-committed command · decision and rationale in `SYNC.md`.
+committed command · decision and rationale in `SYNC.md`. — **PASSED**
 
-**As-shipped delta:** _(fill at close)_
-**Deferred:** _(fill at close)_
+**As-shipped delta:**
+- **The probe earned its place by catching a silent-failure bug that had nothing to do with
+  the architecture risk it was designed for.** `Qwen3.5-4B` is a reasoning model, and its
+  chat template opens a `<think>` block by default. The first adapter test returned
+  `"Thinking Process:"` for all five cases — **0/5 valid classes** — which looked like a
+  failed fine-tune. It was not:
+  - mlx-lm renders *training* examples from the full conversation, which yields
+    `…assistant\n<think>\n\n</think>\n\nfinance<|im_end|>` — a **closed, empty** think block.
+  - Inference with a plain `add_generation_prompt=True` yields an **open** `<think>\n`,
+    so the model does what any reasoning model does with an open think block.
+  - `enable_thinking=False` at inference yields exactly `<think>\n\n</think>\n\n` — a
+    byte-for-byte match with the training prefix. With that flag: **5/5 valid, 5/5 correct.**
+  - **Consequence: `enable_thinking=False` is mandatory in the S7 eval harness.** Without it
+    the student would have scored near zero and the obvious conclusion — "the fine-tune
+    failed" — would have been completely wrong.
+- **Architecture risk fully retired.** `mlx-community/Qwen3.5-4B-bf16` loads (4.21B params,
+  multimodal wrapper and all), LoRA attaches, training converges. Trainable parameters:
+  **0.096% (4.058M of 4,205.75M)**. Peak memory 18.6 GB — well inside 48 GB.
+- **Five correct answers after twenty training examples** is a strong prior that the full run
+  will work. It also means the eventual result will be about *how close* the student gets,
+  which is the trade-off curve the brief actually wants — not whether it learns at all.
+- The model load took 1,104 s on first fetch (8.5 GB download); subsequent loads are cached.
+- Training data built: **3,046 train / 160 valid / 500 test**, balanced (smallest class
+  `consumer` = 182), with a leakage assertion that the held-out 500 never reach the trainer.
+- `--mask-prompt` adopted: without it the model spends capacity learning to regenerate a
+  system prompt it is always given.
+
+**Deferred:**
+- `[⏭]` Nothing. The fallback ladder went unused and stays documented for reproducibility.
 
 ---
 

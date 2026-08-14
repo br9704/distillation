@@ -1,0 +1,42 @@
+# LoRA config — S6 training run.
+#
+# Every value here is written into runs/<id>/hyperparams.json alongside the resolved
+# revision SHA, so a result produced from an unpinned model is impossible.
+
+model: "mlx-community/Qwen3.5-4B-bf16"
+# Pinned. Upstream: Qwen/Qwen3.5-4B @ 851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a (Apache-2.0).
+# The mlx-community repo is a bf16 conversion of exactly that.
+revision: "491fdc7c087ba7fb48adcb1253f8e76d011db783"
+
+train: true
+data: "data/mlx"
+fine_tune_type: lora
+optimizer: adamw
+
+# r=16, per D9 in masterplan.md. No QLoRA: at 4B in bf16 the memory is available on 48 GB
+# unified, and Unsloth advises against QLoRA for Qwen3.5 due to quantization artifacts.
+lora_parameters:
+  keys: ["self_attn.q_proj", "self_attn.v_proj"]
+  rank: 16
+  scale: 20.0
+  dropout: 0.0
+
+# 16 of 32 layers. mlx-lm's default, and the smoke probe reached a valid-class output on
+# 8 layers with 20 examples — this task does not need depth, it needs coverage.
+num_layers: 16
+
+batch_size: 8
+iters: 1200          # ~3 epochs over 3,046 examples at batch 8 (3046/8 = 381 steps/epoch)
+learning_rate: 1e-5
+max_seq_length: 640  # the longest rendered prompt is ~430 tokens; this is comfortable headroom
+
+# Train on the answer only. Without this the model spends capacity learning to regenerate
+# a system prompt it will always be given.
+mask_prompt: true
+
+steps_per_report: 25
+steps_per_eval: 100
+val_batches: 20
+save_every: 200
+adapter_path: "runs/current/adapters"
+seed: 20260814
