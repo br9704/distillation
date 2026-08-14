@@ -157,3 +157,77 @@ with `aethereum status`.)
 > - All five incumbent defects pinned by passing tests — PASS
 > - ASCII-vs-Unicode divergence verified empirically, so the test is not vacuous — PASS
 > - Evidence: `tests/test_scoring.py`, `tests/test_regex_baseline.py`, S1 commit.
+
+---
+
+## S2 — Corpus
+
+**2026-08-14 · `share_intent`**
+> Rebuilding the corpus from the production RSS catalog with zero credentials, then splitting
+> a 500-example held-out set before any labelling exists.
+
+**2026-08-14 · `record_decision` — same-outlet section expansion**
+> Added `EXPANSION_FEEDS`: 84 live section feeds drawn only from outlets already in the
+> production catalog.
+> **Why:** measurement killed the original volume plan. One pass over the 63 production feeds
+> yields ~1,800 unique headlines; a second pass fifteen minutes later yields **7**, because
+> the feeds carry a rolling window that has not moved. Volume comes from breadth or from
+> hours, not from more passes. Section feeds preserve the thing that actually defines the
+> distribution — the outlets — since BBC's technology feed is the same newsroom as BBC's
+> front page. An `assert` in `feeds.py` and a test in `tests/test_corpus.py` enforce that no
+> outlet outside the production catalog is ever introduced; `skysports.com` was probed,
+> worked, and was dropped solely for failing that rule. It also fixed the tail-class problem
+> at its source: the production catalog has 3 sports and 4 science feeds against 16 general,
+> and the expansion adds 11 sports and 17 science.
+
+**2026-08-14 · `record_decision` — proportional sampling, not class-balanced**
+> The held-out 500 is sampled proportionally within section, not balanced across classes.
+> **Why:** balancing would guarantee a full complement of every class, but it would make the
+> held-out set unrepresentative of what the product's ingest actually sees, and every number
+> measured on it would then describe a distribution that does not exist. Macro-F1 already
+> weights classes equally, so buying tail coverage by distorting the sample pays twice for
+> the same thing and misdescribes the traffic. The cost is accepted openly: thin classes get
+> reported in the limitations section rather than padded by synthesis or over-sampling.
+
+**2026-08-14 · `record_decision` — held-out membership is frozen on first split**
+> Re-running `src/split.py` preserves the existing held-out ids exactly and routes everything
+> new to the training pool.
+> **Why:** the background harvester keeps adding rows after the split. Growing the training
+> pool can never leak into the held-out set; re-drawing the held-out set once labelling had
+> begun absolutely could. Freezing makes the bad case impossible by construction instead of
+> depending on someone remembering the rule.
+
+**2026-08-14 · `record_decision` — GDELT abandoned as a backfill source**
+> `src/gdelt.py` is kept but is not used to build this corpus.
+> **Why:** it throttles far beyond its documented 1-req/5s. One request succeeds and every
+> subsequent request returns HTTP 429 regardless of spacing — verified at 20s and at 65s —
+> and it contributed **zero** rows across 20 minutes of patient trickling. It also
+> under-delivers when it does answer: 52 articles against a requested 250. The code is
+> correct and a fresh IP or a later day would work, so it stays; the corpus does not depend
+> on it. Politeness stays a sleep, never a retry-on-429 — hammering a free public service
+> until it relents is not something this repo does.
+
+**2026-08-14 · `record_decision` — design system inherited wholesale**
+> `src/charts.py` transcribes `hive/apps/web/styles/tokens.css`; the `--id-ring-1..8`
+> agent-identity palette is used for the eight topic classes.
+> **Why:** owner instruction is to inherit, not design. The id-ring palette is an exact fit —
+> eight tokens for eight classes, built to be mutually distinguishable, and deliberately
+> excluding green and amber because both are load-bearing signal colours in that system.
+> Amber `#FF9500` is reserved for collision alerts and appears in no chart in this repo.
+> Geist TTFs vendored under SIL OFL-1.1 with the licence, so charts reproduce without
+> depending on the hive repo's path.
+
+**2026-08-14 · `record_verification` — S2 gate**
+> - Corpus: **3,706 unique** headlines, 54 live outlets, 146 feeds attempted — PASS (target amended, A1)
+> - Held-out: exactly **500**, disjoint by id AND by headline, both asserted in code — PASS
+> - Held-out spans 53 outlets; sections entertainment 51 · sports 44 · science 68 — PASS
+> - `charts/class_distribution.png` committed — PASS
+> - `pytest`: **59 passed** — PASS
+> - **Finding: the incumbent regex sends 74.2% of the corpus to `general`.** It places only a
+>   quarter of real headlines into a real class. This is the project's premise, measured.
+> - Feed bitrot: 6 of 146 feeds return 4xx, 5 parse to zero items. All five hand-checked and
+>   correct — including **`nhk.or.jp`, which is a podcast feed** whose items are episode
+>   titles with no article link. That is a live defect in the production catalog.
+> - `[⏭]` all-8-classes-in-held-out deferred to S4: the regex proxy assigns zero held-out
+>   examples to `consumer`, which is a fact about the regex, not about the corpus.
+> - Evidence: `data/corpus.jsonl`, `data/heldout.jsonl`, `charts/class_distribution.png`, S2 commit.

@@ -222,12 +222,14 @@ Per Bruno's instruction, no gate interrupts S0–S8. Everything below waits for 
 
 > Update this line at the end of every sprint.
 
-**Current state:** **S0 closed.** Constitution and masterplan authored (S0–S9 + backlog).
-Toolchain live: `uv` 0.12.4, Python 3.12.13, `mlx-lm` 0.31.3 verified executing on Metal
-(`Device(gpu, 0)`). ccline statusline installed; aethereum room `distillation` created and
-wired (MCP callable next session — `SYNC.md` is the ledger until then). Research verified:
-task locked to 8-class wire topic classification, corpus is public RSS + GDELT with zero
-credentials, teacher is local `Qwen3.5-35B-A3B` Q4_K_M, training path is MLX. Binding
-constraint is 34 GB free disk, resolved by sequencing. **S1 closed:** contracts (`Example`, `Label`, `Prediction`) and
-the scorer are frozen, the incumbent regex is ported with its five defects pinned by tests
-(38 passing). **Next: S2 — corpus.**
+**Current state:** **S0-S2 closed.** Toolchain live (uv, Python 3.12.13, mlx-lm 0.31.3 on
+Metal). Contracts and scorer frozen; the incumbent regex is ported with five defects pinned
+by tests. Corpus rebuilt: **3,706 unique headlines from 54 outlets, zero credentials**, with
+a frozen 500-example held-out set that is disjoint by id and by headline. Design system
+inherited into `src/charts.py`; Geist vendored under OFL-1.1. 59 tests passing.
+
+**The number that matters so far: the production regex sends 74.2% of the corpus to
+`general`.** It puts only a quarter of real headlines into a real class.
+
+**Next: S3 — pull the Qwen3.5-35B-A3B teacher, design and freeze the prompt, pilot 100
+labels.** Watch the disk: the teacher is ~19 GB against 32 GB free.
