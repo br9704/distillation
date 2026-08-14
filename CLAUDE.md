@@ -222,14 +222,19 @@ Per Bruno's instruction, no gate interrupts S0–S8. Everything below waits for 
 
 > Update this line at the end of every sprint.
 
-**Current state:** **S0-S2 closed.** Toolchain live (uv, Python 3.12.13, mlx-lm 0.31.3 on
-Metal). Contracts and scorer frozen; the incumbent regex is ported with five defects pinned
-by tests. Corpus rebuilt: **3,706 unique headlines from 54 outlets, zero credentials**, with
-a frozen 500-example held-out set that is disjoint by id and by headline. Design system
-inherited into `src/charts.py`; Geist vendored under OFL-1.1. 59 tests passing.
+**Current state:** **S0-S3 closed.** Toolchain live; contracts and scorer frozen; corpus
+rebuilt (**3,706 headlines, 54 outlets, zero credentials**) with a frozen, disjoint 500-example
+held-out set. Teacher `Qwen3.5-35B-A3B` Q4_K_M resident (22 GB, Apache-2.0), prompt frozen at
+`v1`, pilot 100 labels at **0% unparseable** and **1.24 labels/s**. 93 tests passing.
 
-**The number that matters so far: the production regex sends 74.2% of the corpus to
-`general`.** It puts only a quarter of real headlines into a real class.
+**Three numbers that shape the write-up:**
+- The production regex sends **74.2%** of the corpus to `general`; the teacher sends **28%**.
+- Teacher self-agreement: **100% at temp 0** (reproducible), **86% at temp 0.7** — and that
+  14% is genuine multi-label ambiguity, a soft ceiling on every arm, not teacher noise.
+- **Six** regex defects now pinned by tests. The worst was found in the S3 pilot: every
+  keyword is a bare noun, so `Russian`/`Chinese`/`Israeli` never match `russia`/`china`/
+  `israel`. Headlines use adjectival forms constantly and all of them land in `general`.
 
-**Next: S3 — pull the Qwen3.5-35B-A3B teacher, design and freeze the prompt, pilot 100
-labels.** Watch the disk: the teacher is ~19 GB against 32 GB free.
+**Next: S4 — label the 3,206-example training pool (~43 min), hand-audit 50, run the
+sequential teacher-latency measurement, then DELETE the teacher.** Disk is **12 GB free**
+(98% used) until that deletion — this is now the tightest constraint in the project.

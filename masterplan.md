@@ -1,6 +1,6 @@
 # masterplan.md — distillation
 
-> **Current sprint: S3 — Teacher setup and pilot** _(S0–S2 closed 2026-08-14)_
+> **Current sprint: S4 — Label, audit, measure, reclaim disk** _(S0–S3 closed 2026-08-14)_
 >
 > Work only the active sprint. Mark tasks live: `[ ]` not started · `[~]` in progress ·
 > `[x]` complete · `[⏭]` deferred (one-line reason). **Never delete or rewrite content in
@@ -291,7 +291,7 @@ section rather than synthesising examples to pad it.
 
 **Goal:** a teacher that answers with one of eight strings, reliably, at a known speed.
 
-- [~] `ollama pull hf.co/unsloth/Qwen3.5-35B-A3B-GGUF:Q4_K_M` (verify actual on-disk size against
+- [x] `ollama pull hf.co/unsloth/Qwen3.5-35B-A3B-GGUF:Q4_K_M` (verify actual on-disk size against
       the 19 GB budget before committing to it; drop to `Q3_K_M` only if it does not fit)
       → **actual size is 22 GB, not the budgeted 19 GB.** Against 31 GB free that leaves
       ~9 GB headroom, which is enough (labels are kilobytes) but tighter than planned. See A2.
@@ -310,15 +310,53 @@ section rather than synthesising examples to pad it.
       weight loading. `latency_run` now discards 3 warm-up calls, because including cold start
       in p95 measures the cost of *starting* a server, not of serving a request, and both arms
       in the comparison are served warm.
-- [ ] Self-consistency probe: 100 headlines × 3 samples at temp 0 and temp 0.7 → report agreement
-- [ ] Pilot 100 labels; eyeball them; iterate the prompt; **freeze `prompt_version`**
-- [ ] `record_decision`: final prompt version, quant, decoding params
+- [x] Self-consistency probe: 100 headlines × 3 samples at temp 0 and temp 0.7 → report agreement
+      → **temp 0: 100/100 unanimous · temp 0.7: 86/100 unanimous**
+- [x] Pilot 100 labels; eyeball them; iterate the prompt; **freeze `prompt_version`**
+      → **0% unparseable, all 8 classes present, prompt frozen at `v1` unchanged**
+- [x] `record_decision`: final prompt version, quant, decoding params
 
-**Acceptance:** ≥98% of pilot outputs parse to a valid class · self-consistency reported ·
-prompt frozen and versioned · throughput measured so S4's runtime is predictable, not a guess.
+**Acceptance:** ≥98% of pilot outputs parse to a valid class _(**100%**)_ · self-consistency
+reported _(100% / 86%)_ · prompt frozen and versioned _(`v1`)_ · throughput measured so S4's
+runtime is predictable, not a guess _(**1.24 labels/s**)_. — **PASSED**
 
-**As-shipped delta:** _(fill at close)_
-**Deferred:** _(fill at close)_
+**As-shipped delta:**
+- **Prompt v1 needed no iteration.** 100/100 pilot labels parsed, all eight classes were used,
+  and hand inspection found the labels sound. Frozen as `v1`.
+- **Teacher determinism is perfect: 100/100 unanimous at temp 0.** The labelling run is
+  exactly reproducible, which is what that probe existed to prove.
+- **Teacher self-agreement at temp 0.7 is 86%, and the 14% is not noise — it is genuine
+  multi-label ambiguity.** Every disagreement inspected was a headline that honestly belongs
+  to two classes: *"Prabowo touts Indonesia's economic growth"* (finance/geopolitics),
+  *"Micron: China probes US chip maker for cybersecurity risk"* (geopolitics/tech),
+  *"Hundreds of millions at risk from Chinese shopping app malware"* (consumer/tech).
+  **This is a soft ceiling on every arm, not a teacher weakness**, and it belongs in S8's
+  limitations: the task forces one label onto headlines that carry two.
+- **Teacher vs regex disagree on 60 of 100 pilot examples**, and inspection says the teacher
+  is right in nearly all of them — `Arsenal express interest in signing Quansah` → sports,
+  `I got an £89 refund - how to cancel unwanted subscriptions` → consumer,
+  `Italian police recover stolen Renoir, Cézanne and Matisse paintings` → entertainment.
+- **Distribution, the headline comparison:** the regex sends **74.2%** of the corpus to
+  `general`; the teacher sends **28%** of the pilot there.
+- **A sixth regex defect found via the pilot, and it is the most consequential one.**
+  A teacher/regex disagreement on *"Russian drones kill a woman"* looked wrong until checked:
+  every keyword is a bare noun and `\b` requires a non-word character after it, so
+  **`Russian` does not match `russia`, `Chinese` does not match `china`, `Israeli` does not
+  match `israel`, `Ukrainian` does not match `ukraine`, `Korean` does not match `korea`.**
+  Headlines use adjectival forms constantly, and every one of them lands in `general`. This
+  is a large part of the 74%. Verified across five pairs and pinned by a test.
+- **A teacher error found by hand, recorded rather than hidden:** *"New Zealand breaks ranks
+  and withdraws Infantino support"* → labelled `geopolitics`, but Infantino is the FIFA
+  president and this is a sports-governance story. Exactly the kind of case the S4 audit
+  exists to quantify.
+- Throughput **1.24 labels/s** ⇒ S4 projects to ~43 min for the 3,206-example training pool
+  plus ~7 min for the held-out 500. Cold start is ~19.6 s against ~800 ms warm.
+- Disk after the pull: **12 GB free** (98% used). Enough — labels are kilobytes — but it is
+  now the thing to watch until S4 deletes the teacher.
+
+**Deferred:**
+- `[⏭]` Prompt iteration — nothing to iterate. v1 passed on first contact, and changing a
+  working prompt to look busy would only invalidate the pilot that validated it.
 
 ---
 

@@ -231,3 +231,58 @@ with `aethereum status`.)
 > - `[⏭]` all-8-classes-in-held-out deferred to S4: the regex proxy assigns zero held-out
 >   examples to `consumer`, which is a fact about the regex, not about the corpus.
 > - Evidence: `data/corpus.jsonl`, `data/heldout.jsonl`, `charts/class_distribution.png`, S2 commit.
+
+---
+
+## S3 — Teacher setup and pilot
+
+**2026-08-14 · `share_intent`**
+> Pulling the Qwen3.5-35B-A3B teacher, designing and freezing the labelling prompt, and
+> piloting 100 labels before committing the full run to it.
+
+**2026-08-14 · `record_decision` — JSON-schema-constrained decoding**
+> The request carries a schema whose `topic` field is an enum over the eight classes.
+> **Why:** the planned approach — ask for one word, parse the reply — spends label quality on
+> an avoidable problem. Constraining the sampler makes an invalid class impossible.
+> `UNPARSEABLE` is retained rather than removed, because a request can still fail at the
+> transport layer, and those failures must surface instead of quietly becoming `general`.
+> Measured result: **0% unparseable across the 100-example pilot.**
+
+**2026-08-14 · `record_decision` — prompt frozen at `v1`, unchanged**
+> **Why:** the pilot passed on first contact — 100/100 parsed, all eight classes used, labels
+> sound on inspection. Iterating a prompt that works would invalidate the pilot that
+> validated it. `prompt_version` is written into every `Label` row, so a mixed-prompt dataset
+> would be detectable after the fact rather than silently averaged.
+
+**2026-08-14 · `record_decision` — latency measured warm, with warm-up discarded**
+> `latency_run` throws away three calls before timing anything.
+> **Why:** measured on this machine, a cold first call costs 19.6 s against ~800 ms warm —
+> that is weight-loading, not inference. Including it in p95 would report the cost of
+> *starting* a server rather than of serving a request, and both arms in this comparison are
+> served warm. Stated in METHODOLOGY rather than buried in the code.
+
+**2026-08-14 · `record_verification` — S3 gate**
+> - Teacher pulled: `hf.co/unsloth/Qwen3.5-35B-A3B-GGUF:Q4_K_M`, **22 GB**, Apache-2.0 — PASS
+> - Pilot: 100 labels, **0% unparseable**, all 8 classes present — PASS (bar was ≥98%)
+> - Self-consistency **temp 0: 100/100 unanimous** — labelling is exactly reproducible — PASS
+> - Self-consistency **temp 0.7: 86/100 unanimous** — reported — PASS
+> - Throughput **1.24 labels/s** ⇒ S4 ≈ 43 min (train) + 7 min (held-out) — PASS
+> - `pytest`: **93 passed** — PASS
+> - Disk: **12 GB free**, 98% used. Watch until S4 deletes the teacher.
+>
+> **Findings that change the write-up:**
+> - The 14% temp-0.7 disagreement is **genuine multi-label ambiguity, not model noise**.
+>   Every case inspected honestly belonged to two classes. This is a soft ceiling on *every*
+>   arm and belongs in S8 limitations — the task forces one label onto two-class headlines.
+> - Teacher and regex **disagree on 60 of 100** pilot examples, with the teacher right in
+>   nearly all of them.
+> - Regex sends **74.2%** of the corpus to `general`; the teacher sends **28%** of the pilot.
+> - **Sixth regex defect, the most consequential yet:** every keyword is a bare noun and `\b`
+>   demands a non-word character after it, so `Russian`/`Chinese`/`Israeli`/`Ukrainian`/
+>   `Korean` never match `russia`/`china`/`israel`/`ukraine`/`korea`. Headlines use the
+>   adjectival form constantly and every one lands in `general`. Verified over five pairs,
+>   pinned by a test, and a large part of the 74%.
+> - **A teacher error, recorded not hidden:** *"New Zealand breaks ranks and withdraws
+>   Infantino support"* → `geopolitics`, but Infantino is FIFA's president and this is sports
+>   governance. The S4 audit exists to put a number on how often this happens.
+> - Evidence: `/tmp/pilot_labels.jsonl`, consistency log, `tests/test_regex_baseline.py`, S3 commit.

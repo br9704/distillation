@@ -49,6 +49,30 @@ def test_a_country_name_anywhere_forces_geopolitics(headline, why):
     assert classify_wire_item(headline) == "geopolitics", why
 
 
+@pytest.mark.parametrize(
+    ("noun_form", "adjectival_form"),
+    [
+        ("Russia strikes Kyiv", "Russian drones kill a woman"),
+        ("China probes chip maker", "Chinese shopping app malware"),
+        ("Israel and Iran trade fire", "Israeli forces advance"),
+        ("Ukraine ceasefire talks", "Ukrainian forces advance"),
+        ("Korea talks resume", "Korean peninsula tension"),
+    ],
+)
+def test_adjectival_forms_fall_through_to_general(noun_form, adjectival_form):
+    """Bug 6, found in the S3 pilot and the most consequential of the lot.
+
+    Every keyword is a bare noun, and `\\b` requires a non-word character after it, so
+    "Russian" does not match `russia`, "Chinese" does not match `china`, and so on. Headlines
+    use the adjectival form constantly — "Russian drones", "Chinese app", "Israeli forces" —
+    and every one of them lands in `general`.
+
+    This is a large part of why the incumbent sends 74% of the corpus there.
+    """
+    assert classify_wire_item(noun_form) == "geopolitics"
+    assert classify_wire_item(adjectival_form) == "general"
+
+
 def test_general_is_a_catch_all_not_a_class():
     """Bug 5, and the reason macro-F1 rather than accuracy is the headline metric."""
     assert classify_wire_item("Local council approves new park on Riverside Drive") == "general"
