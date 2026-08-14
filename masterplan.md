@@ -1,6 +1,6 @@
 # masterplan.md — distillation
 
-> **Current sprint: S1 — Contracts and scoring** _(S0 closed 2026-08-14)_
+> **Current sprint: S2 — Corpus** _(S0, S1 closed 2026-08-14)_
 >
 > Work only the active sprint. Mark tasks live: `[ ]` not started · `[~]` in progress ·
 > `[x]` complete · `[⏭]` deferred (one-line reason). **Never delete or rewrite content in
@@ -159,24 +159,49 @@ one clean foundation commit. — **PASSED**
 **Goal:** the label schema and the scoring function are frozen *before* any labelling. The
 brief is explicit that this ordering is not optional.
 
-- [ ] `src/schema.py` — `TOPIC_CLASSES`, the 8 exact strings, copied verbatim from `wire.ts:350–380`
-- [ ] `Example` — `{id, headline, outlet, url, published_at, source_feed, split}`
-- [ ] `Label` — `{id, label, teacher_model, teacher_revision, prompt_version, latency_ms, raw_output}`
-- [ ] `Prediction` / results JSONL — `{id, arm, pred, gold, latency_ms}`; `arm ∈ {regex, teacher, student}`
-- [ ] `src/scoring.py` — accuracy · **macro-F1** · per-class P/R/F1/support · confusion matrix
-- [ ] `src/regex_baseline.py` — a faithful Python port of `classifyWireItem`, **including its
+- [x] `src/schema.py` — `TOPIC_CLASSES`, the 8 exact strings, copied verbatim from `wire.ts:350–380`
+- [x] `Example` — `{id, headline, outlet, url, published_at, source_feed, split}`
+- [x] `Label` — `{id, label, teacher_model, teacher_revision, prompt_version, latency_ms, raw_output}`
+- [x] `Prediction` / results JSONL — `{id, arm, pred, gold, latency_ms}`; `arm ∈ {regex, teacher, student}`
+- [x] `src/scoring.py` — accuracy · **macro-F1** · per-class P/R/F1/support · confusion matrix
+- [x] `src/regex_baseline.py` — a faithful Python port of `classifyWireItem`, **including its
       ordering bug** (the `if` chain returns on first match). Port the behaviour, not the intent.
-- [ ] `tests/test_scoring.py` — hand-built confusion fixture with a known macro-F1
-- [ ] `tests/test_regex_baseline.py` — parity cases pinning the known quirks:
+- [x] `tests/test_scoring.py` — hand-built confusion fixture with a known macro-F1
+- [x] `tests/test_regex_baseline.py` — parity cases pinning the known quirks:
       `"Amazon Prime Day"` → `tech` (not `consumer`, because `amazon` matches the tech rule first),
       `"SpaceX launch"` → `tech` (not `science`), any headline containing `china` → `geopolitics`
-- [ ] `declare_contract` for `Example`, `Label`, `Prediction`
+- [x] `declare_contract` for `Example`, `Label`, `Prediction`
 
 **Acceptance:** `pytest` green · macro-F1 verified by hand against the fixture ·
-the three regex quirks are pinned by passing tests · contracts in `SYNC.md`.
+the three regex quirks are pinned by passing tests · contracts in `SYNC.md`. — **PASSED**
+(38 tests, 0.32s)
 
-**As-shipped delta:** _(fill at close)_
-**Deferred:** _(fill at close)_
+**As-shipped delta:**
+- **Two extra defects found while porting**, beyond the three the plan anticipated, so five
+  are now pinned: `target` in the consumer rule is unreachable in practice, and `general` is
+  structurally a catch-all rather than a class — the second is the standing justification
+  for D7 (macro-F1 over accuracy).
+- **`re.ASCII` is required for a faithful port** and this was not anticipated. JavaScript's
+  `\b` is ASCII-based; Python's is Unicode-aware by default. Verified empirically:
+  `"iraníes protest in the capital"` matches the geopolitics rule under `re.ASCII` and does
+  not under Python's default. Without the flag the incumbent arm would have been quietly
+  weaker than the thing actually running in production. The corpus includes DW, France24,
+  SCMP and Haaretz, so this is a live concern rather than a curiosity.
+- **Macro-F1 averaging convention made explicit and test-pinned.** Averaging over present
+  classes only would read 0.7222 on the S1 fixture against our 0.2708. Scoring is implemented
+  from first principles (~60 lines, no scikit-learn) specifically so this choice is visible
+  in the repo rather than inherited from a library default.
+- Added `UNPARSEABLE` to `schema.py` with the scorer raising if it ever reaches it — the
+  no-silent-coercion rule is now enforced by code, not just documented.
+- Added `percentile()` (nearest-rank) and `confusion_pairs()` to `scoring.py` now rather
+  than in S7, since both are contracts the later sprints consume.
+- Added `CLASS_DEFINITIONS` beside `TOPIC_CLASSES` with an `assert` tying them together, so
+  the S3 teacher prompt cannot drift from the label space.
+
+**Deferred:**
+- `[⏭]` Chart styling helpers (`src/charts.py`) — first needed by S2's class-distribution
+  chart. Building the Aethereum-token matplotlib theme with no data to render would be
+  guesswork.
 
 ---
 

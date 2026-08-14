@@ -100,4 +100,60 @@ with `aethereum status`.)
 
 ## S1 — Contracts and scoring
 
-_(entries appended at sprint start)_
+**2026-08-14 · `share_intent`**
+> Freezing the label schema, the results schema and the scoring function before any label
+> exists, plus a faithful port of the production regex as the incumbent arm. The brief is
+> explicit that this ordering is not optional.
+
+**2026-08-14 · `declare_contract` — `Example` v1**
+> `{id: sha256(url)[:16], headline, outlet, url, published_at?, source, split: train|heldout}`
+> Produced by `src/harvest.py` and `src/gdelt.py`. `id` is the key that S2's disjointness
+> assertion runs on.
+
+**2026-08-14 · `declare_contract` — `Label` v1**
+> `{id, label: TopicClass|UNPARSEABLE, teacher_model, teacher_revision, prompt_version,
+> latency_ms, raw_output}`
+> Produced by `src/teacher.py`. `raw_output` is retained so any parse decision can be
+> re-audited. `UNPARSEABLE` is **not** a ninth class — consumers filter, never coerce.
+
+**2026-08-14 · `declare_contract` — `Prediction` v1**
+> `{id, arm: regex|teacher|student, pred, gold, latency_ms}` — the results JSONL row shape.
+> `gold` is the teacher's label. Calling it gold is a convenience, not a claim: it is a
+> model's opinion, and S4's hand-audit measures the distance between the two.
+
+**2026-08-14 · `record_decision` — macro-F1 averaging convention**
+> Macro-F1 averages over **all eight** classes in `TOPIC_CLASSES`, not over the classes
+> present in the data.
+> **Why:** scikit-learn's default averages over labels present in `y_true ∪ y_pred`, which
+> silently forgives a class the model never learned. On the S1 fixture that default reads
+> 0.7222 against our 0.2708 — nearly 3× flattering. A distilled small model dropping a tail
+> class entirely is precisely the failure this project exists to surface, so it must count
+> as a zero rather than vanish from the mean. Implemented from first principles rather than
+> imported, so the choice is visible in this repo instead of inherited from a library.
+
+**2026-08-14 · `record_decision` — the incumbent is ported with its bugs intact**
+> `src/regex_baseline.py` reproduces `classifyWireItem()` behaviourally, including five
+> defects that follow from "first `if` that matches wins":
+> `amazon` in the tech rule makes the consumer rule's `amazon prime` keyword dead code ·
+> `spacex` appears in both tech and science, so the science occurrence never fires ·
+> any country name forces `geopolitics` regardless of subject · `target` is unreachable in
+> practice · everything unmatched falls to `general`, which is a catch-all rather than a class.
+> **Why:** silently fixing them would make the incumbent arm a strawman in the opposite
+> direction — it would no longer be the thing running in production, and the comparison
+> would measure nothing. Each defect is pinned by a passing test so a future "fix" fails loudly.
+
+**2026-08-14 · `record_decision` — ASCII word-boundary semantics**
+> The port compiles every rule with `re.ASCII`.
+> **Why:** JavaScript's `\b` is defined over ASCII word characters; Python's is Unicode-aware
+> by default. Verified divergence: on `"iraníes protest in the capital"` the geopolitics rule
+> matches under `re.ASCII` (production behaviour) and does **not** match under Python's
+> default. The corpus includes DW, France24, SCMP and Haaretz, so accented text is not
+> hypothetical. Without this flag the incumbent arm would be quietly weaker than production.
+
+**2026-08-14 · `record_verification` — S1 gate**
+> - `pytest`: **38 passed** in 0.32s — PASS
+> - Scorer verified against a hand-computed fixture: accuracy 4/6, macro-F1 0.270833 — PASS
+> - Averaging convention pinned by a test asserting the result is *not* the flattering 0.7222 — PASS
+> - All five incumbent defects pinned by passing tests — PASS
+> - ASCII-vs-Unicode divergence verified empirically, so the test is not vacuous — PASS
+> - Evidence: `tests/test_scoring.py`, `tests/test_regex_baseline.py`, S1 commit.

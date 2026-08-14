@@ -228,5 +228,6 @@ Toolchain live: `uv` 0.12.4, Python 3.12.13, `mlx-lm` 0.31.3 verified executing 
 wired (MCP callable next session — `SYNC.md` is the ledger until then). Research verified:
 task locked to 8-class wire topic classification, corpus is public RSS + GDELT with zero
 credentials, teacher is local `Qwen3.5-35B-A3B` Q4_K_M, training path is MLX. Binding
-constraint is 34 GB free disk, resolved by sequencing. **Next: S1 — contracts and scoring,
-which must be frozen before a single label exists.**
+constraint is 34 GB free disk, resolved by sequencing. **S1 closed:** contracts (`Example`, `Label`, `Prediction`) and
+the scorer are frozen, the incumbent regex is ported with its five defects pinned by tests
+(38 passing). **Next: S2 — corpus.**
