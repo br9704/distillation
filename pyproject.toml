@@ -1,0 +1,26 @@
+[project]
+name = "distillation"
+version = "0.1.0"
+description = "LoRA-distilling a live production news classifier from a large open teacher into a ~4B model"
+# System Python is 3.14, which is too new for the ML wheels. Pinned to 3.12.
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "mlx>=0.32.0",
+    "mlx-lm>=0.31.3",
+    "httpx>=0.27",
+    "pydantic>=2.9",
+    "matplotlib>=3.9",
+    "numpy>=1.26",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.uv]
+package = false

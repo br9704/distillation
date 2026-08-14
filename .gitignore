@@ -1,0 +1,38 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Data — regenerable from src/harvest.py + src/gdelt.py, and large.
+# The corpus is derived from public RSS headlines; keeping it out of git keeps the
+# repo reviewable. results/ and charts/ ARE committed — they back the README's numbers.
+data/
+
+# Models — never committed. Pinned by revision SHA in runs/*/hyperparams.json instead.
+models/
+*.gguf
+*.safetensors
+
+# Run artifacts: loss curves and hyperparams ARE committed (see !runs/ rules below),
+# checkpoints are not.
+runs/*/checkpoints/
+runs/*/adapters/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+*.swp
+
+# ccline local overrides
+.ccline.json
+.mcp.json
+.cursor/mcp.json
+.vscode/mcp.json
+opencode.json
