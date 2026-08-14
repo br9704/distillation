@@ -291,13 +291,25 @@ section rather than synthesising examples to pad it.
 
 **Goal:** a teacher that answers with one of eight strings, reliably, at a known speed.
 
-- [ ] `ollama pull hf.co/unsloth/Qwen3.5-35B-A3B-GGUF:Q4_K_M` (verify actual on-disk size against
+- [~] `ollama pull hf.co/unsloth/Qwen3.5-35B-A3B-GGUF:Q4_K_M` (verify actual on-disk size against
       the 19 GB budget before committing to it; drop to `Q3_K_M` only if it does not fit)
-- [ ] `src/teacher.py` — prompt v1: the 8 classes with the one-line definition each, the
+      → **actual size is 22 GB, not the budgeted 19 GB.** Against 31 GB free that leaves
+      ~9 GB headroom, which is enough (labels are kilobytes) but tighter than planned. See A2.
+- [x] `src/teacher.py` — prompt v1: the 8 classes with the one-line definition each, the
       headline, the outlet; instruction to answer with exactly one class string
-- [ ] Constrained output: parse strictly, retry once with a stricter prompt, then mark
+- [x] Constrained output: parse strictly, retry once with a stricter prompt, then mark
       `UNPARSEABLE` — never silently coerce to `general` (that would bias the teacher toward
       the majority class and corrupt the ceiling)
+      → upgraded to **JSON-schema-constrained decoding** with an enum over the 8 classes, so
+      the sampler cannot emit anything else. `UNPARSEABLE` is retained for transport-level
+      failures and is still reported.
+- [x] `tests/test_teacher.py` — 21 tests on prompt integrity and the parser's refusal to guess
+- [x] HTTP path smoke-tested end-to-end against `llama3:8b` before the teacher landed, so the
+      API contract (`/api/chat`, `format` schema, `think: false`) was proven independently
+- [x] **Cold-start discovered and handled**: first call 5,184 ms vs ~500 ms warm — pure
+      weight loading. `latency_run` now discards 3 warm-up calls, because including cold start
+      in p95 measures the cost of *starting* a server, not of serving a request, and both arms
+      in the comparison are served warm.
 - [ ] Self-consistency probe: 100 headlines × 3 samples at temp 0 and temp 0.7 → report agreement
 - [ ] Pilot 100 labels; eyeball them; iterate the prompt; **freeze `prompt_version`**
 - [ ] `record_decision`: final prompt version, quant, decoding params
@@ -507,3 +519,25 @@ so growth after this point is safe by construction.
 smaller distillation set, and the honest expectation is a slightly weaker student —
 particularly on the tail classes. That is a limitation for S8 to report, not a number to
 quietly round up.
+
+**A2 · 2026-08-14 · Teacher on-disk size is 22 GB, not the budgeted 19 GB.**
+
+The disk-sequencing plan assumed ~19 GB for `Qwen3.5-35B-A3B` at Q4_K_M. The actual Ollama
+pull is **22 GB**, leaving ~9 GB free rather than ~13 GB during S3–S4.
+
+This does not break the plan, because the sequencing is what protects the budget rather than
+the specific number: labels are kilobytes, so nothing else grows while the teacher is
+resident, and S4 still ends by deleting it before the student is pulled. Revised peaks:
+
+```
+S3-S4  teacher resident              22 GB   → ~9 GB free   (was ~13 GB)
+S4     DELETE teacher               −22 GB   → ~31 GB free
+S5-S6  student base + merged + adapter 16 GB → ~15 GB free
+```
+
+Two options were available and neither was taken. Dropping to `Q3_K_M` (~17 GB) would buy
+headroom by degrading the teacher, and the teacher is the ceiling for everything downstream —
+a worse teacher is a worse project. Deleting the two pre-existing Ollama models
+(`llama3:8b`, `dolphin-llama3:8b`, 9.6 GB together) would free plenty, but they are Bruno's
+and this project does not delete a user's models to make room for itself. If the disk does
+become binding, that is the option to raise with him rather than act on.
