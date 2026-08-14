@@ -286,3 +286,63 @@ with `aethereum status`.)
 >   Infantino support"* → `geopolitics`, but Infantino is FIFA's president and this is sports
 >   governance. The S4 audit exists to put a number on how often this happens.
 > - Evidence: `/tmp/pilot_labels.jsonl`, consistency log, `tests/test_regex_baseline.py`, S3 commit.
+
+---
+
+## S4 — Label, audit, measure, reclaim disk
+
+**2026-08-14 · `share_intent`**
+> Labelling the held-out 500 and the 3,206-example training pool, hand-auditing 50 to fix the
+> ceiling, measuring teacher latency sequentially, then deleting the 22 GB teacher.
+
+**2026-08-14 · `record_decision` — `num_ctx` pinned to 2048 mid-run**
+> Ollama defaulted the teacher to a 32,768-token context for ~250-token prompts. That KV
+> cache, on top of 22 GB of resident weights on a 48 GB machine, drove the system into swap
+> (7.7 GB, 290k pageouts) and took free disk from 12 GB to 4 GB during the run.
+> **Why 2048:** still 8× headroom over the longest prompt, and it stopped the bleed
+> immediately. **Why not the alternatives:** dropping to a smaller quant would degrade the
+> teacher, and the teacher is the ceiling for every number downstream; deleting the 9.6 GB of
+> pre-existing `llama3` models would have freed plenty but they are Bruno's, and this project
+> does not delete a user's models to make room for itself. A watchdog was armed to abort
+> labelling below 2 GB — the run is checkpointed every 50, so an abort would have cost one
+> batch. It never fired.
+
+**2026-08-14 · `record_decision` — the mid-run config change is verified, not assumed**
+> Re-labelled 60 randomly sampled examples from the first 1,000 (written under the old
+> 32,768 context) using the new 2,048 setting: **60/60 identical**.
+> **Why it mattered:** the first 1,000 labels and the remaining 2,206 were produced under
+> different runtime configuration. At temperature 0 with prompts that fit comfortably in both
+> windows the output *should* be identical — but "should be" is not evidence, and a dataset
+> silently split across two configs would be a real defect. Now measured.
+
+**2026-08-14 · `record_decision` — the teacher arm is not scored against its own labels**
+> Gold *is* the teacher, so "teacher accuracy vs gold" is 100% by construction and means
+> nothing. S7 will instead report the **hand-audit 84%** as the teacher's estimated true
+> accuracy, and will state plainly that student-vs-gold measures agreement with the teacher
+> rather than correctness.
+> **Why:** reporting a constructed 100% next to a real student number would be the single
+> most misleading thing this project could publish.
+
+**2026-08-14 · `record_verification` — S4 gate**
+> - Labels: **3,206 train + 500 held-out = 3,706**, **0.00% unparseable** — PASS
+> - Hand audit: **84% strict** (6% disagree, 10% genuinely ambiguous; 93% excluding ambiguous)
+>   — recorded in `results/audit_50.md` **before any student exists**, so it cannot be tuned
+>   to flatter one — PASS
+> - Teacher latency, sequential and warm, n=500: **p50 782 ms · p95 868 ms** (min 562, max 1061) — PASS
+> - Disk reclaimed: **6.1 GB → 27 GB** (21 GB), Bruno's models untouched — PASS
+> - `charts/label_distribution.png` committed — PASS
+>
+> **Reproducibility, evidenced three ways:**
+> - 100/100 unanimous at temp 0 (S3 consistency probe)
+> - **60/60 identical** across the `num_ctx` change
+> - **500/500 identical** on a fully independent re-prediction of the held-out set
+>
+> **Findings:**
+> - Of the 375 held-out headlines the regex calls `general`, the teacher reassigns **310
+>   (82.7%)**. The catch-all is wrong five times out of six.
+> - On the same 500: regex `general` 75%, teacher `general` 13.2%.
+> - On the 3,206 training pool: teacher `general` 426 (13.3%) vs regex `general` **2,374
+>   (74%)**; teacher `consumer` 191 vs regex `consumer` **6**. The teacher yields a balanced
+>   training set where the incumbent yields rubble.
+> - Evidence: `data/train_labels.jsonl`, `data/heldout_labels.jsonl`,
+>   `data/teacher_latency.jsonl`, `results/audit_50.md`, `charts/label_distribution.png`.

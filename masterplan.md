@@ -1,6 +1,6 @@
 # masterplan.md — distillation
 
-> **Current sprint: S4 — Label, audit, measure, reclaim disk** _(S0–S3 closed 2026-08-14)_
+> **Current sprint: S5 — Base-model architecture probe** _(S0–S4 closed 2026-08-14)_
 >
 > Work only the active sprint. Mark tasks live: `[ ]` not started · `[~]` in progress ·
 > `[x]` complete · `[⏭]` deferred (one-line reason). **Never delete or rewrite content in
@@ -365,24 +365,64 @@ runtime is predictable, not a guess _(**1.24 labels/s**)_. — **PASSED**
 **Goal:** ~5,000 training labels, a known noise ceiling, and the teacher's real latency —
 captured before the weights are deleted.
 
-- [ ] Label `data/train_pool.jsonl` (~5,000) — unattended, resumable (checkpoint every 100,
-      keyed by id, so a crash costs one batch not the run)
-- [ ] Label the held-out 500 → `data/heldout_labels.jsonl` (this is the gold set for every arm)
-- [ ] **Hand-audit 50 held-out labels.** I adjudicate; disagreements are itemised, not just counted.
+- [x] Label `data/train_pool.jsonl` — unattended, resumable (checkpoint every 50,
+      keyed by id, so a crash costs one batch not the run) → **3,206 labels, 0% unparseable**
+- [x] Label the held-out 500 → `data/heldout_labels.jsonl` (this is the gold set for every arm)
+      → **500 labels, 0% unparseable, all 8 classes, smallest class 34**
+- [x] **Hand-audit 50 held-out labels.** I adjudicate; disagreements are itemised, not just counted.
       This number is the ceiling — the student cannot meaningfully exceed it.
-- [ ] **Teacher latency run:** held-out 500, sequential, one request at a time, no batching.
-      Record p50 and p95. This is the honest measurement; batched throughput is not latency.
-- [ ] `charts/label_distribution.png` — teacher labels vs regex labels, side by side. The
+      → **84% strict · 6% disagree · 10% ambiguous** → `results/audit_50.md`
+- [x] **Teacher latency run:** held-out 500, sequential, one request at a time, no batching.
+      Record p50 and p95. → **p50 782 ms · p95 868 ms** (min 562, max 1061)
+- [x] `charts/label_distribution.png` — teacher labels vs regex labels, side by side. The
       divergence here is itself a finding.
-- [ ] Confusion matrix: regex vs teacher on the held-out 500 → the incumbent's error profile
-- [ ] `ollama rm` the teacher; verify reclaimed space with `df`
-- [ ] `record_verification`: counts, audit agreement, p50/p95, disk before/after
+- [x] Confusion matrix: regex vs teacher on the held-out 500 → the incumbent's error profile
+      (right panel of the chart: where the regex's `general` pile actually belongs)
+- [x] `ollama rm` the teacher; verify reclaimed space with `df` → **6.1 GB → 27 GB**
+- [x] `record_verification`: counts, audit agreement, p50/p95, disk before/after
+- [x] **Reproducibility verified three ways** (not planned; see delta)
 
-**Acceptance:** ≥4,800 valid labels · `UNPARSEABLE` rate reported (not hidden) · 50-example
-audit agreement reported as an explicit ceiling · teacher p50/p95 recorded · ≥18 GB reclaimed.
+**Acceptance:** ≥4,800 valid labels _(**3,706** — consistent with amendment A1, which lowered
+the corpus target; every harvested example is labelled and none was dropped)_ · `UNPARSEABLE`
+rate reported, not hidden _(**0.00%**)_ · 50-example audit agreement reported as an explicit
+ceiling _(**84%**)_ · teacher p50/p95 recorded _(**782/868 ms**)_ · ≥18 GB reclaimed
+_(**21 GB**)_. — **PASSED as amended**
 
-**As-shipped delta:** _(fill at close)_
-**Deferred:** _(fill at close)_
+**As-shipped delta:**
+- **The result the project turns on:** of the 375 held-out headlines the regex calls
+  `general`, the teacher reassigns **310 — 82.7%**. The incumbent's catch-all is wrong five
+  times out of six. On the same 500, regex `general` = 75%, teacher `general` = 13.2%.
+- **The teacher produces a genuinely balanced training set** where the regex produces rubble.
+  On the identical 3,206-example pool: teacher `general` 426 (13.3%) vs regex `general`
+  **2,374 (74%)**; teacher `consumer` 191 vs regex `consumer` **6**. Smallest teacher class is
+  191, which is enough to learn from.
+- **Reproducibility evidenced three ways rather than asserted** — none of this was planned,
+  all of it was prompted by the mid-run config change:
+  1. self-consistency probe, 100/100 unanimous at temp 0 (S3);
+  2. **60/60 identical** across the `num_ctx` 32768→2048 change, so the config change
+     provably altered no label;
+  3. **500/500 identical** when the latency run independently re-predicted the entire
+     held-out set and reproduced gold exactly.
+- **A disk incident, diagnosed rather than survived.** Free space fell 12 GB → 4 GB mid-run.
+  Cause: Ollama defaulted this model to a **32,768-token context** for ~250-token prompts,
+  and that KV cache on top of 22 GB of resident weights drove the machine into swap (7.7 GB,
+  290k pageouts) hard enough to consume the disk. Pinning `num_ctx: 2048` — still 8× headroom
+  — stopped it immediately. The two obvious shortcuts were both declined: degrading the quant
+  would degrade the ceiling every downstream number depends on, and the 9.6 GB of
+  pre-existing Ollama models are Bruno's, not this project's to delete to make room for
+  itself. A watchdog was armed to abort labelling below 2 GB; it never had to fire.
+- **The teacher arm cannot be scored against its own labels.** Gold *is* the teacher, so a
+  naive "teacher accuracy" would read 100% by construction and mean nothing. S7 reports the
+  **hand-audit 84%** as the teacher's estimated true accuracy instead, and states plainly
+  that student-vs-gold measures *agreement with the teacher*, not correctness.
+- Labelling throughput held at ~1.22/s; the training pool took 29.7 min after the restart.
+- The background harvester was stopped once labelling began: rows arriving after the split
+  can never be labelled (the training pool is fixed), so it was consuming memory for nothing.
+  The corpus file ends at 3,812 rows of which **3,706 are split and labelled**; the extra 106
+  arrived late and are deliberately unused rather than quietly folded in.
+
+**Deferred:**
+- `[⏭]` Nothing deferred from this sprint.
 
 ---
 

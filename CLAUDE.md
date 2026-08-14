@@ -222,19 +222,25 @@ Per Bruno's instruction, no gate interrupts S0–S8. Everything below waits for 
 
 > Update this line at the end of every sprint.
 
-**Current state:** **S0-S3 closed.** Toolchain live; contracts and scorer frozen; corpus
-rebuilt (**3,706 headlines, 54 outlets, zero credentials**) with a frozen, disjoint 500-example
-held-out set. Teacher `Qwen3.5-35B-A3B` Q4_K_M resident (22 GB, Apache-2.0), prompt frozen at
-`v1`, pilot 100 labels at **0% unparseable** and **1.24 labels/s**. 93 tests passing.
+**Current state:** **S0-S4 closed.** Corpus rebuilt (3,706 headlines, 54 outlets, zero
+credentials) and **fully labelled by the teacher at 0.00% unparseable**: 3,206 training +
+500 held-out. Teacher deleted, **27 GB free**. 93 tests passing.
 
-**Three numbers that shape the write-up:**
-- The production regex sends **74.2%** of the corpus to `general`; the teacher sends **28%**.
-- Teacher self-agreement: **100% at temp 0** (reproducible), **86% at temp 0.7** — and that
-  14% is genuine multi-label ambiguity, a soft ceiling on every arm, not teacher noise.
-- **Six** regex defects now pinned by tests. The worst was found in the S3 pilot: every
-  keyword is a bare noun, so `Russian`/`Chinese`/`Israeli` never match `russia`/`china`/
-  `israel`. Headlines use adjectival forms constantly and all of them land in `general`.
+**The numbers the write-up is built on:**
+- Of the 375 held-out headlines the regex calls `general`, the teacher reassigns **310 (82.7%)**.
+  The incumbent's catch-all is wrong five times out of six.
+- On the 3,206 training pool: teacher `general` 426 (13.3%) vs regex `general` **2,374 (74%)**;
+  teacher `consumer` 191 vs regex `consumer` **6**.
+- Teacher latency, sequential and warm: **p50 782 ms · p95 868 ms**.
+- Hand-audit ceiling: **84%** strict agreement (`results/audit_50.md`), recorded before any
+  student existed. The taxonomy has no `politics` class and that is an irreducible floor.
+- Reproducibility evidenced three ways: 100/100 temp-0 unanimity, 60/60 across the `num_ctx`
+  change, **500/500** on an independent re-prediction of the whole held-out set.
 
-**Next: S4 — label the 3,206-example training pool (~43 min), hand-audit 50, run the
-sequential teacher-latency measurement, then DELETE the teacher.** Disk is **12 GB free**
-(98% used) until that deletion — this is now the tightest constraint in the project.
+**Gold is the teacher, so the teacher arm cannot be scored against it** — S7 reports the
+audit's 84% as the teacher's estimated accuracy and states that student-vs-gold measures
+agreement, not correctness.
+
+**Next: S5 — probe `mlx-lm` LoRA on Qwen3.5-4B with 20 examples.** `qwen3_5` is already
+confirmed registered and to handle the multimodal `text_config` nesting, so the fallback
+ladder is expected to go unused.
