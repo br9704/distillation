@@ -357,6 +357,20 @@ training sprint to it.
 linear/full attention. `mlx-community` conversions exist, which is encouraging but not proof
 that `mlx_lm.lora` handles the arch.
 
+> **Pre-verified during S3's download wait (2026-08-14) — this risk is largely retired.**
+> Inspected the installed `mlx-lm` 0.31.3 directly rather than waiting for S5:
+> - `mlx_lm.models.qwen3_5` exists (118 architectures registered; the Qwen family includes
+>   `qwen3_5`, `qwen3_5_moe`, `qwen3_next`, `qwen3_vl`).
+> - It **explicitly handles the multimodal nesting**: `ModelArgs.from_dict` checks for
+>   `text_config` and wraps a bare text config when absent, and `Model` builds its
+>   `language_model` from `args.text_config`. That was the specific failure mode feared.
+> - It implements `GatedDeltaNet`, i.e. the hybrid linear-attention layers are real, not
+>   silently substituted with full attention.
+>
+> This cost nothing (no weights, no disk) and was done while the 22 GB teacher downloaded.
+> The fallback ladder below stays in place — a registered architecture is not the same as a
+> working LoRA run — but option 1 is now the expected outcome rather than a hope.
+
 - [ ] 20-example smoke fine-tune. Success = the run completes, loss decreases, the adapter
       loads, and 5 predictions parse to valid classes.
 - [ ] Fallback ladder — take the first that passes, `record_decision` on the choice:
