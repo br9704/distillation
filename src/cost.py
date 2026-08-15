@@ -6,9 +6,10 @@ dishonest, so the label travels with the number everywhere it appears — in thi
 `results/summary.json`, and in the README.
 
 What *is* measured, and what makes the arithmetic real rather than asserted, is the token
-count. Both figures below come from tokenising the actual rendered prompts with the actual
-tokeniser (`src/prepare_training.py` for the student, `src/teacher.py` for the teacher), not
-from an estimate.
+count. The four figures come from `results/token_counts.json`, which `src/measure_tokens.py`
+produces by rendering all 500 held-out headlines through the exact prompt builders each arm
+used and tokenising them with the pinned Qwen3.5-4B tokeniser. This module reads that artifact
+and refuses to run without it, so no hardcoded token count can drift back in.
 
 ## Prices
 
@@ -36,18 +37,42 @@ Prices retrieved 2026-08-15. They move; re-check before republishing.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
+from pathlib import Path
 
 # $ per 1M tokens, flat across input and output.
 RATE_SUB_4B = 0.10
 RATE_MOE_56B = 0.50
 
-# Measured with the real tokeniser on the real rendered prompts. See AMENDMENT A3 —
-# the 299 -> 32 gap is the student not needing the 262-token class-definition block.
-TEACHER_INPUT_TOKENS = 299
-TEACHER_OUTPUT_TOKENS = 10  # `{"topic": "geopolitics"}` under constrained decoding
-STUDENT_INPUT_TOKENS = 32
-STUDENT_OUTPUT_TOKENS = 2  # the bare class name
+TOKEN_COUNTS = Path(__file__).resolve().parent.parent / "results" / "token_counts.json"
+
+
+def _measured() -> dict:
+    """Load the token counts from the committed artifact `src/measure_tokens.py` produces.
+
+    These used to be four hardcoded constants under a docstring claiming they were measured.
+    They were not, and two were wrong in the direction that flattered the headline: the student
+    input was set to 32 (A3's figure for a whole *training example*, a different quantity — it
+    measures 35.98) and the teacher output to 10 (it measures 6.51, so teacher cost was
+    overstated). Reading the artifact makes the docstring's claim true and means the number
+    cannot drift from the tokeniser again.
+    """
+    if not TOKEN_COUNTS.exists():
+        raise FileNotFoundError(
+            f"{TOKEN_COUNTS} is missing — run `uv run python -m src.measure_tokens` first. "
+            "The cost model refuses to fall back to hardcoded token counts."
+        )
+    return json.loads(TOKEN_COUNTS.read_text())["counts"]
+
+
+_COUNTS = _measured()
+
+# Means, because cost per 1,000 requests is a total and the mean is what totals.
+TEACHER_INPUT_TOKENS = _COUNTS["teacher_input"]["mean"]
+TEACHER_OUTPUT_TOKENS = _COUNTS["teacher_output"]["mean"]  # `{"topic": "..."}` envelope
+STUDENT_INPUT_TOKENS = _COUNTS["student_input"]["mean"]
+STUDENT_OUTPUT_TOKENS = _COUNTS["student_output"]["mean"]  # the bare class name
 
 REQUESTS = 1000
 
@@ -56,12 +81,12 @@ REQUESTS = 1000
 class ArmCost:
     arm: str
     rate_per_m: float
-    input_tokens: int
-    output_tokens: int
+    input_tokens: float
+    output_tokens: float
 
     @property
-    def tokens_per_request(self) -> int:
-        return self.input_tokens + self.output_tokens
+    def tokens_per_request(self) -> float:
+        return round(self.input_tokens + self.output_tokens, 2)
 
     @property
     def cost_per_request(self) -> float:
@@ -155,8 +180,6 @@ def breakdown() -> dict:
 
 
 def main() -> None:
-    import json
-
     data = breakdown()
     print(data["disclaimer"])
     print()

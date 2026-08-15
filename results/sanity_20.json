@@ -1,0 +1,233 @@
+{
+  "n": 20,
+  "valid": 20,
+  "invalid": 0,
+  "agrees_with_teacher": 17,
+  "note": "Gold is the teacher's label, so `agrees_with_teacher` is agreement, not accuracy. The acceptance criterion is that predictions PARSE to valid classes; agreement is reported alongside because a model that parses perfectly and answers randomly would otherwise pass.",
+  "predictions": [
+    {
+      "id": "bca73d47f6ffb145",
+      "headline": "Initiatives aim to help breastfeeding difficulties",
+      "outlet": "bbc.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 360.3
+    },
+    {
+      "id": "551fc2973bbe9d32",
+      "headline": "Two deadly flowers could inspire powerful new medicines",
+      "outlet": "sciencedaily.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 307.57
+    },
+    {
+      "id": "c94da5561fb85dbb",
+      "headline": "From blast off to splashdown: My days following Nasa's historic mission to the Moon",
+      "outlet": "bbc.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 315.21
+    },
+    {
+      "id": "921c19a689140a13",
+      "headline": "Stress can scramble your brain\u2019s internal GPS, MRI study finds",
+      "outlet": "sciencedaily.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 313.18
+    },
+    {
+      "id": "7f08758a320357f6",
+      "headline": "Terraforming Mars may be more realistic than scientists once thought",
+      "outlet": "sciencedaily.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 304.92
+    },
+    {
+      "id": "bd9cd34896ae5e44",
+      "headline": "DNA reveals a society organised around women in pre-Roman Britain",
+      "outlet": "newscientist.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 313.68
+    },
+    {
+      "id": "06a07459fcf28ca5",
+      "headline": "NHS must plan for heatwaves like it does for winter, health secretary says",
+      "outlet": "bbc.com",
+      "gold": "science",
+      "raw_output": "general",
+      "parsed": "general",
+      "valid": true,
+      "agrees_with_teacher": false,
+      "latency_ms": 332.37
+    },
+    {
+      "id": "5b4afe419c68efec",
+      "headline": "Hundreds attend teenager's eclipse party",
+      "outlet": "bbc.com",
+      "gold": "general",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": false,
+      "latency_ms": 310.62
+    },
+    {
+      "id": "dcc710816f6a1670",
+      "headline": "1 in 5 people may carry this hidden genetic heart risk",
+      "outlet": "sciencedaily.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 305.51
+    },
+    {
+      "id": "7c669a9824d6d224",
+      "headline": "Sun-like star caught after eating one of its own planets",
+      "outlet": "sciencedaily.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 295.82
+    },
+    {
+      "id": "cefd67a2ddd966c0",
+      "headline": "Space news: The Perseid meteor shower, the Sun's surface, and a SpaceX moon crash",
+      "outlet": "npr.org",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 308.68
+    },
+    {
+      "id": "e209bdd1df85a674",
+      "headline": "Author Correction: Cretaceous bird from Brazil informs the evolution of the avian skull and brain",
+      "outlet": "nature.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 309.37
+    },
+    {
+      "id": "a1dd7d8aeeadebd6",
+      "headline": "A shattered asteroid may have bombarded Earth 800 million years ago",
+      "outlet": "sciencedaily.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 327.65
+    },
+    {
+      "id": "8b5ad271e317abdf",
+      "headline": "National Trust expands park by 32 hectares",
+      "outlet": "bbc.com",
+      "gold": "science",
+      "raw_output": "general",
+      "parsed": "general",
+      "valid": true,
+      "agrees_with_teacher": false,
+      "latency_ms": 310.24
+    },
+    {
+      "id": "0f17db5d72d777c7",
+      "headline": "Most detailed images taken of sun's surface revealed",
+      "outlet": "cbsnews.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 310.81
+    },
+    {
+      "id": "8e8939abae0797ee",
+      "headline": "Killer heat: how a warming land is changing Australia forever",
+      "outlet": "theguardian.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 321.38
+    },
+    {
+      "id": "6a1004416d5cd051",
+      "headline": "Manila river clogged with rubbish after Typhoon Dolphin floods \u2013 in pictures",
+      "outlet": "theguardian.com",
+      "gold": "general",
+      "raw_output": "general",
+      "parsed": "general",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 318.44
+    },
+    {
+      "id": "b4feb2b562c2ffd8",
+      "headline": "Mike Fincke, NASA Astronaut Whose Health Scare Led to I.S.S. Evacuation, Has Retired",
+      "outlet": "nytimes.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 330.04
+    },
+    {
+      "id": "7e1952900def0611",
+      "headline": "Groups challenge FCC approval of startup\u2019s plan to beam on-demand sunlight from space",
+      "outlet": "nbcnews.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 317.29
+    },
+    {
+      "id": "1edd1a4498129295",
+      "headline": "Higgs boson breakthrough was UK triumph, but British physics faces 'catastrophic' cuts",
+      "outlet": "bbc.com",
+      "gold": "science",
+      "raw_output": "science",
+      "parsed": "science",
+      "valid": true,
+      "agrees_with_teacher": true,
+      "latency_ms": 332.41
+    }
+  ],
+  "checked": "merged weights",
+  "model": "/Users/brunojaamaa/Desktop/distillation/models/student-merged",
+  "adapter": null,
+  "base_model_revision": "491fdc7c087ba7fb48adcb1253f8e76d011db783"
+}

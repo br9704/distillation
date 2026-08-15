@@ -1,0 +1,73 @@
+{
+  "chosen_iter": 800,
+  "chosen_val_loss": 0.075,
+  "final_iter": 1200,
+  "final_val_loss": 0.28,
+  "forced": false,
+  "selected_on": "the 160-example validation split carved from the training pool. The held-out 500 played no part in this choice and were never read by this module.",
+  "val_evaluations": 13,
+  "val_evaluations_with_a_checkpoint": 6,
+  "ranking": [
+    {
+      "iter": 800,
+      "val_loss": 0.075
+    },
+    {
+      "iter": 600,
+      "val_loss": 0.077
+    },
+    {
+      "iter": 200,
+      "val_loss": 0.08
+    },
+    {
+      "iter": 400,
+      "val_loss": 0.093
+    },
+    {
+      "iter": 1000,
+      "val_loss": 0.276
+    },
+    {
+      "iter": 1200,
+      "val_loss": 0.28
+    }
+  ],
+  "unselectable": [
+    {
+      "iter": 1,
+      "val_loss": 5.604,
+      "why": "no checkpoint saved at this iteration"
+    },
+    {
+      "iter": 100,
+      "val_loss": 0.095,
+      "why": "no checkpoint saved at this iteration"
+    },
+    {
+      "iter": 300,
+      "val_loss": 0.079,
+      "why": "no checkpoint saved at this iteration"
+    },
+    {
+      "iter": 500,
+      "val_loss": 0.075,
+      "why": "no checkpoint saved at this iteration"
+    },
+    {
+      "iter": 700,
+      "val_loss": 0.083,
+      "why": "no checkpoint saved at this iteration"
+    },
+    {
+      "iter": 900,
+      "val_loss": 0.076,
+      "why": "no checkpoint saved at this iteration"
+    },
+    {
+      "iter": 1100,
+      "val_loss": 0.279,
+      "why": "no checkpoint saved at this iteration"
+    }
+  ]
+}

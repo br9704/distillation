@@ -1,0 +1,45 @@
+{
+  "note": "Measured, not estimated. Every held-out headline rendered through the exact prompt builders each arm used, tokenised with the pinned Qwen3.5-4B tokeniser. cost.py reads the MEAN of each field, because cost per 1,000 requests is a total.",
+  "caveat": "The teacher (Qwen3.5-35B-A3B) shares the Qwen tokeniser family but its weights were deleted in S4, so teacher counts are measured with the student's tokeniser. Stated rather than glossed.",
+  "tokenizer": {
+    "model": "mlx-community/Qwen3.5-4B-bf16",
+    "revision": "491fdc7c087ba7fb48adcb1253f8e76d011db783"
+  },
+  "source": "data/heldout.jsonl",
+  "prompt_version": "v1",
+  "counts": {
+    "teacher_input": {
+      "n": 500,
+      "mean": 302.98,
+      "median": 303.0,
+      "min": 288,
+      "max": 323,
+      "stdev": 5.28
+    },
+    "teacher_output": {
+      "n": 500,
+      "mean": 6.51,
+      "median": 6.0,
+      "min": 6,
+      "max": 8,
+      "stdev": 0.8
+    },
+    "student_input": {
+      "n": 500,
+      "mean": 35.98,
+      "median": 36.0,
+      "min": 21,
+      "max": 56,
+      "stdev": 5.28
+    },
+    "student_output": {
+      "n": 500,
+      "mean": 1.51,
+      "median": 1.0,
+      "min": 1,
+      "max": 3,
+      "stdev": 0.8
+    },
+    "system_prompt_alone": 262
+  }
+}

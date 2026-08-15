@@ -1,0 +1,105 @@
+{
+  "generated_by": "src/stats.py",
+  "note": "Recomputed from data/*.jsonl, which is gitignored. Every value here was first produced in S2-S4; this file exists so the README cites an artifact rather than a ledger entry. Regenerate with: uv run python -m src.stats",
+  "corpus": {
+    "harvested_rows": 3812,
+    "split_and_labelled": 3706,
+    "unused_late_arrivals": 106,
+    "outlets": 54,
+    "heldout": 500,
+    "train_pool": 3206,
+    "split_disjoint": true
+  },
+  "labels": {
+    "total": 3706,
+    "unparseable": 0,
+    "unparseable_rate": 0.0,
+    "teacher_model": "hf.co/unsloth/Qwen3.5-35B-A3B-GGUF:Q4_K_M",
+    "prompt_version": "v1",
+    "classes_present_in_heldout": 8,
+    "smallest_heldout_class": 34
+  },
+  "distribution": {
+    "scope": "labelled corpus (3,706 split rows)",
+    "regex_general": 2749,
+    "regex_general_rate": 0.7418,
+    "regex_general_rate_full_harvest": 0.7413,
+    "train_pool": {
+      "teacher": {
+        "geopolitics": 563,
+        "finance": 359,
+        "tech": 356,
+        "sports": 364,
+        "entertainment": 410,
+        "science": 537,
+        "consumer": 191,
+        "general": 426
+      },
+      "regex": {
+        "geopolitics": 197,
+        "finance": 125,
+        "tech": 241,
+        "sports": 91,
+        "entertainment": 67,
+        "science": 105,
+        "consumer": 6,
+        "general": 2374
+      }
+    },
+    "heldout": {
+      "teacher": {
+        "geopolitics": 97,
+        "finance": 51,
+        "tech": 60,
+        "sports": 52,
+        "entertainment": 62,
+        "science": 78,
+        "consumer": 34,
+        "general": 66
+      },
+      "regex": {
+        "geopolitics": 23,
+        "finance": 19,
+        "tech": 42,
+        "sports": 14,
+        "entertainment": 8,
+        "science": 19,
+        "consumer": 0,
+        "general": 375
+      }
+    }
+  },
+  "regex_general_reassignment": {
+    "scope": "held-out 500",
+    "regex_called_general": 375,
+    "teacher_moved_elsewhere": 310,
+    "reassignment_rate": 0.8267,
+    "destinations": {
+      "geopolitics": 78,
+      "finance": 31,
+      "tech": 23,
+      "sports": 39,
+      "entertainment": 50,
+      "science": 59,
+      "consumer": 30,
+      "general": 0
+    }
+  },
+  "teacher_latency_ms": {
+    "n": 500,
+    "protocol": "sequential, one request at a time, warm, 3 warm-up calls discarded",
+    "p50": 781.82,
+    "p95": 867.67,
+    "min": 562.39,
+    "max": 1060.92
+  },
+  "hand_audit": {
+    "n": 50,
+    "source": "results/audit_50.md",
+    "agree": 42,
+    "disagree": 3,
+    "ambiguous": 5,
+    "strict_agreement": 0.84,
+    "agreement_excluding_ambiguous": 0.93
+  }
+}

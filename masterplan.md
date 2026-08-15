@@ -1,6 +1,6 @@
 # masterplan.md — distillation
 
-> **Current sprint: S6 — Train** _(S0–S5 closed)_
+> **Current sprint: S8 — Writeup** _(S0–S7 closed · Sprint D closed)_
 >
 > Work only the active sprint. Mark tasks live: `[ ]` not started · `[~]` in progress ·
 > `[x]` complete · `[⏭]` deferred (one-line reason). **Never delete or rewrite content in
@@ -500,23 +500,139 @@ committed command · decision and rationale in `SYNC.md`. — **PASSED**
 
 # S6 — Train
 
-- [ ] `src/train.py` / `configs/lora.yaml` — LoRA **r=16**, bf16, 3 epochs, lr + schedule logged
-- [ ] Chat-formatted examples using the frozen `prompt_version` from S3 — **the student must see
+- [x] `src/train.py` / `configs/lora.yaml` — LoRA **r=16**, bf16, 3 epochs, lr + schedule logged
+      → No `src/train.py` was written. Training runs off the `mlx-lm` CLI against the committed
+      config, which is the same thing with less code to drift:
+      `uv run python -m mlx_lm lora -c configs/lora.yaml > runs/current/train.log 2>&1`
+      1,200 iters at batch 8 over 3,046 examples ≈ 3.2 epochs. lr 1e-5, constant (no schedule).
+- [x] Chat-formatted examples using the frozen `prompt_version` from S3 — **the student must see
       the same prompt shape the teacher saw**, or the comparison is not clean
-- [ ] Train/valid split inside the training pool (held-out is never touched)
-- [ ] Log every step's loss to `runs/<id>/loss.jsonl`
-- [ ] `charts/training_curve.png` — committed. The brief calls a missing loss curve the first
+      → **Superseded by AMENDMENT A3.** The student gets the lean `Outlet:/Headline:` shape and
+      no system block. Both arms still see identical *information* and the identical held-out
+      500, so the quality comparison is clean; only the token count differs, and that is an S7
+      result rather than a confound. The shape lives in `student_messages()`
+      (`src/prepare_training.py`), which `src/evaluate.py` imports so the two cannot drift.
+- [x] Train/valid split inside the training pool (held-out is never touched)
+      → 3,046 train / 160 valid / 500 test, built in S5, leakage assertion on id passes.
+- [x] Log every step's loss to `runs/<id>/loss.jsonl`
+      → `steps_per_report` lowered 25 → 1 so the log is genuinely per-step. **1,213 records
+      (1,200 train + 13 val)**, written by `src/record_run.py` — a producer that did not exist
+      before this sprint. `nan` is preserved as an explicit `null` gap, never dropped.
+- [x] `charts/training_curve.png` — committed. The brief calls a missing loss curve the first
       thing a reviewer notices.
-- [ ] `runs/<id>/hyperparams.json` — every hyperparameter, base-model revision, dataset hash,
+      → 1,200 train points, 13 val points, 4 nan report windows (iters 85, 100, 423, 949)
+      plotted as marked gaps and annotated.
+- [x] `runs/<id>/hyperparams.json` — every hyperparameter, base-model revision, dataset hash,
       prompt version, mlx/mlx-lm versions
-- [ ] Merge adapter → `models/student-merged/`
-- [ ] Runtime target ~15–60 min. If it heads past 2 h, stop and reduce — the brief caps this.
+      → Also carries the git commit and a **dirty flag**, the sha256 of each dataset split, and
+      the resolved run facts (peak memory, it/s, trainable parameters, completion status).
+- [x] Merge adapter → `models/student-merged/`
+      → 7.9 GB, gitignored. Fused with `mlx_lm fuse`, not a hand-rolled merge — a subtly wrong
+      merge produces a model that loads, generates, and is quietly not the model trained.
+      **Gotcha recorded:** `fuse` resolves models through
+      `snapshot_download(local_files_only=True)` and aborted on a missing `.gitattributes`,
+      a file carrying no weights. `src/merge_student.py` now resolves the local snapshot
+      directory, which is named by the revision SHA — so the pin is kept, not weakened.
+- [x] 20 sanity predictions parse to valid classes (Acceptance clause, listed here so it is tracked)
+      → **20/20 valid, 17/20 agree with the teacher**, run against the MERGED weights rather
+      than the adapter, because the merge is the step that could silently change behaviour.
+      Raw outputs retained in `results/sanity_20.json` so any parse decision can be re-audited.
+- [x] Runtime target ~15–60 min. If it heads past 2 h, stop and reduce — the brief caps this.
+      → Observed 0.313 it/s sustained: **1,200 iters in ~64 minutes**. Inside the 60-minute
+      target once val time is excluded, comfortably inside the 2 h cap.
+
+**Finding — the last 200 iterations made the model measurably worse.** Validation loss:
+
+```
+iter    1  100  200  300  400  500  600  700  800  900  1000  1100  1200
+val  5.604 .095 .080 .079 .093 .075 .077 .083 .075 .076  .276  .279  .280
+```
+
+Validation bottomed at **0.075** (iters 500 and 800) and blew out to **0.280** over the final
+stretch. Train loss rose with it (0.127 → 0.219), so this is an optimisation excursion rather
+than overfitting — but the effect on quality is real either way, and it is the reason
+`src/select_checkpoint.py` exists:
+
+- Selected **iter 800** (val 0.075) over the final iter 1200 (val 0.280).
+- Worth **+8.0 macro-F1 points**: **0.8400** vs **0.7599**. Shipping mlx-lm's default final
+  checkpoint would have discarded a tenth of the model's quality.
+- **Selected on the 160-example validation split only.** The held-out 500 take no part —
+  `select_checkpoint.py` never opens that file, and selection refuses any iteration with no
+  checkpoint on disk (iter 500 also hit 0.075 but had none, so it was not selectable).
+- Both evaluations are committed: `results/summary.json` (iter 800) and
+  `results/summary_final_checkpoint.json` (iter 1200). The choice is recorded with its full
+  ranking in `runs/current/best/selection.json`.
+- `3.2 epochs was too many for this task` is a finding for METHODOLOGY, not a number to hide.
+
+**Finding — `num_layers: 16` tunes FOUR layers, not sixteen.** Reconciles a discrepancy
+between S5's recorded `0.096% (4.058M)` and this run's `0.022% (0.918M)`. Read directly off
+the adapter's own tensor names (no model load required — the safetensors header is enough):
+
+```
+16 tensors · 917,504 params (0.918M) · F32
+layers touched: [19, 23, 27, 31]          <- four, not sixteen
+modules:        self_attn.q_proj x8, self_attn.v_proj x8   (A and B per module)
+shapes:         (2560,16) x8 · (16,8192) x4 · (16,1024) x4
+```
+
+Qwen3.5-4B is a **hybrid** architecture: `full_attention_interval: 4`, so `layer_types` is
+`[linear_attention, linear_attention, linear_attention, full_attention, ...]` — only 8 of its
+32 layers are full attention, and the other 24 are `GatedDeltaNet`, which has no
+`self_attn.q_proj`/`v_proj` to attach to. `num_layers: 16` selects the last 16 layers, of which
+exactly four (19, 23, 27, 31) carry the targeted modules. The config reads as though sixteen
+layers are being tuned; four are.
+
+This is not a bug and the run is not invalidated — but it is the kind of thing that belongs in
+METHODOLOGY rather than being quietly correct. **The student learns the task with 0.022% of
+its parameters trainable, across 4 of 32 layers**, which strengthens rather than weakens the
+distillation story. The authoritative figure for S6 is the run log's `0.022% (0.918M of
+4,205.75M)`; S5's `4.058M` came from the probe under a different key set and is left in place
+as the probe's record.
+
+**Run history (expanded in place — the first two runs are part of the record):**
+1. Pre-A3 run, killed at ~iter 300. 299 tokens/example projected ~10 h. Triggered A3.
+2. Post-A3 run, 2026-08-15 03:53–05:02. Died at **~iter 1170 of 1200** — not a crash in the
+   training code but a **macOS GPU-driver kernel panic** (`IOGPUGroupMemory.cpp:323`, panicked
+   task `python3.12` at 25 GB resident). The reboot cleared `/tmp`, and the run had been
+   logging to `/tmp/train.log`, so **the loss history for iters 1–1000 is unrecoverable**.
+   Adapters through iter 1000 preserved at `runs/interrupted-panic-20260815/`, unused.
+   Discarded rather than resumed: `mlx-lm` restarts the iteration counter on resume and does
+   not checkpoint optimiser state, so a resumed run yields neither an uninterrupted model nor
+   an honestly plottable curve. Reconstructing a curve from a lost log would break the
+   honest-claims rule outright.
+3. Re-run, 2026-08-15 19:46 →. Identical seed/data/hyperparameters except `steps_per_report`.
+   **Logs to `runs/current/train.log`, inside the repo, where a reboot cannot take it.**
 
 **Acceptance:** loss decreases and the curve is committed · adapter loads standalone ·
 20 sanity predictions parse to valid classes · hyperparams + dataset hash recorded.
+— **PASSED**
+- Loss decreases: train 5.334 → 0.196, val 5.604 → 0.075 at the selected checkpoint — PASS
+- Curve committed: `charts/training_curve.png`, 1,200 train + 13 val points — PASS
+- Adapter loads standalone: 500 held-out predictions, **0 unparseable** — PASS
+- 20 sanity predictions parse: **20/20 valid** against the merged weights — PASS
+- Hyperparams + dataset hash: `runs/current/hyperparams.json`, sha256 per split — PASS
 
-**As-shipped delta:** _(fill at close)_
-**Deferred:** _(fill at close)_
+**As-shipped delta:**
+- **The run this sprint had to survive was its third.** Run 1 died at ~iter 300 (pre-A3, 299
+  tokens/example, ~10 h projected). Run 2 reached ~iter 1170 of 1200 and was killed by a macOS
+  **GPU-driver kernel panic** (`IOGPUGroupMemory.cpp:323`), which rebooted the machine and
+  cleared `/tmp` — where it had been logging. That cost the entire loss history and forced a
+  full retrain rather than a resume: `mlx-lm` restarts the iteration counter on resume and does
+  not checkpoint optimiser state, so a resumed run yields neither an uninterrupted model nor an
+  honestly plottable curve. Run 3 logged to `runs/current/train.log`, inside the repo.
+- **Peak memory 43.911 GB on a 48 GB machine.** That is 91% of unified memory, and it is why
+  every other model load was held for the duration rather than run concurrently — the panic had
+  already demonstrated what that headroom is worth. Documented so the next run budgets for it.
+- **`num_layers: 16` trains four layers, not sixteen** (full finding above). 0.022% of
+  parameters trainable — 917,504 of 4,205,750,000 — across layers 19, 23, 27 and 31.
+- **The best checkpoint was not the final one**, worth +8.0 macro-F1 (full finding above).
+- Two producers that the plan assumed existed and did not: `src/record_run.py` (loss.jsonl +
+  hyperparams.json) and `src/select_checkpoint.py`. `mlx-lm` writes neither.
+- No `src/train.py` was written. Training runs off the `mlx-lm` CLI against the committed
+  config — the same thing with less code to drift out of sync with what actually ran.
+
+**Deferred:**
+- `[⏭]` Nothing deferred. Every S6 task closed.
 
 ---
 
@@ -524,28 +640,93 @@ committed command · decision and rationale in `SYNC.md`. — **PASSED**
 
 **Goal:** all three metrics, all three arms, one harness, every number regenerable.
 
-- [ ] `src/evaluate.py` — one harness, three arms, the same 500 held-out examples,
+- [x] `src/evaluate.py` — one harness, three arms, the same 500 held-out examples,
       the same machine, gold = teacher labels (with the audit-derived ceiling stated alongside)
-- [ ] **Quality** — accuracy, **macro-F1**, per-class P/R/F1, confusion matrix per arm
-- [ ] **Latency** — p50 **and** p95, measured by this harness, sequential, single request.
+      → Teacher quality is refused, not computed: gold IS its output, so any figure is 100% by
+      construction. The harness prints `n/a` and carries the 84% hand audit instead.
+- [x] **Quality** — accuracy, **macro-F1**, per-class P/R/F1, confusion matrix per arm
+      → **student macro-F1 0.8400 · accuracy 0.8540 · 0 unparseable of 500**
+        **regex   macro-F1 0.3372 · accuracy 0.3420**
+- [x] **Latency** — p50 **and** p95, measured by this harness, sequential, single request.
       Student measured here; teacher's numbers come from the S4 run on the identical set.
-- [ ] **Cost** — per 1,000 requests, arithmetic shown line by line, **explicitly labelled
+      → **student p50 327.1 ms · p95 402.4 ms** (3 warm-up calls discarded, `perf_counter`
+        around a single sequential `generate`). Teacher p50 781.8 · p95 867.7 from S4.
+        The student is **2.4x faster** than the teacher it was distilled from.
+- [x] **Cost** — per 1,000 requests, arithmetic shown line by line, **explicitly labelled
       list-price** (all local runs cost $0). Show the token counts the arithmetic uses.
-- [ ] **Error analysis, the part most people skip:**
-  - [ ] Confusion matrix → the top 5 confused pairs
-  - [ ] Error taxonomy by cause, not just by class
-  - [ ] Prose: *where and why* the student loses. "It confuses `tech` and `science` on
+      → teacher **$0.1547**/1k · student **$0.0037**/1k · regex $0. Student is **2.42% of
+        teacher cost, 41.3x cheaper** = 5.0x price tier x 8.26x fewer tokens.
+      → **The token counts were wrong and are now measured.** `cost.py` hardcoded four
+        constants under a docstring claiming they were measured; two were wrong in the
+        flattering direction (student input 32 vs a real 35.98 — that 32 was A3's figure for a
+        whole training *example*; teacher output 10 vs a real 6.51). `src/measure_tokens.py`
+        now derives all four from the real tokeniser over all 500 held-out rows into
+        `results/token_counts.json`, and `cost.py` raises rather than falling back if it is
+        absent. The corrected headline is **41.3x, not the 45.4x previously committed.**
+- [x] **Error analysis, the part most people skip:**
+  - [x] Confusion matrix → the top 5 confused pairs
+        → student: `general`→`science` 7 · `consumer`→`tech` 7 · `general`→`geopolitics` 7 ·
+          `general`→`entertainment` 5 · `consumer`→`general` 4
+  - [x] Error taxonomy by cause, not just by class
+        → regex buckets are mechanical and checkable against its own source (catch-all
+          fall-through, the `china`-before-everything rule, first-match-wins). Student buckets
+          are deliberately coarser — inventing fine-grained causes for a neural model's errors
+          would be storytelling.
+  - [x] Prose: *where and why* the student loses. "It confuses `tech` and `science` on
         space-launch headlines" beats any aggregate number.
-  - [ ] The inverse: cases where the **student beats the regex badly** — that is the product argument
-  - [ ] Headline-length and outlet-tier breakdowns of student error
-- [ ] `results/summary.json` — every number the README will cite
-- [ ] One command regenerates all of it
+        → `results/error_analysis.md`. The real weakness is **`consumer` recall 52.9%**
+          (F1 0.679, its weakest class), most often called `tech` — a milder inheritance of
+          the very `Amazon Prime Day → tech` bug this project opens with.
+  - [x] The inverse: cases where the **student beats the regex badly** — that is the product argument
+        → **student right where the regex is wrong: 285. Regex right where the student is
+          wrong: 29.** Verbatim examples for both in `error_analysis.md`.
+  - [x] Headline-length and outlet-tier breakdowns of student error
+        → Length bands shipped. **Outlet TIER could not be shipped honestly: no tier taxonomy
+          exists in this repo.** `Feed` is `(outlet, url, section)` and `heldout.jsonl` has no
+          `tier` field, so a tier column would have read `unknown` for all 500 rows while
+          looking like a result. Invented an editorial ranking? No — reported per-outlet
+          (real) plus a **volume band** cut on held-out counts, labelled in the artifact as a
+          stated proxy for prominence rather than an editorial judgement.
+- [x] `results/summary.json` — every number the README will cite
+      → Now also carries a `provenance` block: evaluated_at, base model + **pinned revision**,
+        adapter path, **adapter sha256**, held-out file hashes, git commit and dirty flag. The
+        harness previously recorded none of this and did not pass the revision to `load()`,
+        so it resolved whatever snapshot the cache held — a direct CLAUDE.md violation.
+- [x] One command regenerates all of it
+      → `uv run python -m src.reproduce` (`--skip-student` for the GPU-free path, `--dry-run`
+        to print the pipeline). Deliberately does **not** train.
 
 **Acceptance:** three arms × three metrics, all present · confusion matrices committed ·
 error taxonomy written in prose · every README number traceable to `results/summary.json`.
+— **PASSED**
+- Three arms x three metrics: quality + latency + cost for regex and student; latency + cost
+  for the teacher, with quality refused on principle and the 84% audit reported instead — PASS
+- Confusion matrices committed: `charts/confusion_regex.png`, `charts/confusion_student.png` — PASS
+- Error taxonomy in prose: `results/error_analysis.md` — PASS
+- Every number traceable: `results/summary.json` + `token_counts.json` + `error_analysis.json`
+  + `sanity_20.json` + `hyperparams.json`, all committed — PASS
 
-**As-shipped delta:** _(fill at close)_
-**Deferred:** _(fill at close)_
+**As-shipped delta:**
+- **The student loses to the regex on exactly one class, and it leads rather than hides.**
+  `general` recall: student 68.2% vs regex 98.5%, a 30-point loss. The mechanism matters and is
+  reported *after* the loss, never instead of it: the regex reaches 98.5% recall at **17.3%
+  precision** by answering `general` for 375 of 500 headlines. On F1 the ordering reverses —
+  student 0.698 vs regex 0.295 — and on F1 the student loses no class at all. `per_class_gap`
+  therefore reports `student_loses` (recall) and `student_loses_on_f1` as separate flags, so
+  neither framing can quietly swallow the other.
+- **The regex never predicts `consumer`. Not once in 500.** Precision, recall and F1 are all
+  0.000 for that class. The student reaches 0.679 F1 on it.
+- Evaluated **two** checkpoints, not one, and committed both — the headline (iter 800) and the
+  default final weights (iter 1200) that a less careful run would have shipped.
+- `summarise()` now states in the artifact that quality is scored over parseable predictions
+  only, with unparseable counted and reported separately. It is 0 here, so the distinction is
+  currently moot — it is written down precisely so a future non-zero cannot be misread.
+
+**Deferred:**
+- `[⏭]` Outlet-**tier** breakdown — the data does not exist in this repo (see above). Shipped
+  per-outlet and a labelled volume-band proxy instead. Adding a real tier taxonomy would mean
+  authoring editorial judgements about 54 outlets, which is a new source of unbacked claims,
+  not a breakdown.
 
 ---
 
@@ -598,6 +779,134 @@ answer recorded. A declined gate is a completed task, not a failure.
 
 **As-shipped delta:** _(fill at close)_
 **Deferred:** _(fill at close)_
+
+---
+
+# Sprint D — Documentation
+
+**Goal:** the repo reads well to a stranger on GitHub — a picture and a number in the first
+screen, the architecture from one diagram, and a findable receipt for every claim — plus a
+machine-readable `PROJECT.json` the portfolio consumes. Driven by `DOCS-ENGINEERPROMPT.md`.
+
+**Run out of sequence, deliberately.** The docs prompt says to run this after the engineering
+is done. It is not: S6 was mid-flight and S7 had never run. Bruno's call was to document now
+with the student's results marked pending rather than block the write-up on the training run.
+That constraint is what the sprint is shaped around — see the As-shipped delta.
+
+- [x] Read `CLAUDE.md`, all of `masterplan.md`, `SYNC.md`, the current `README.md`, and enough
+      of `src/` to draw the architecture honestly
+- [x] `uv run pytest` — **138 passed**, captured rather than quoted (93 at the start of the
+      sprint; the parallel S6/S7 session added the chart-guard and provenance suites while it ran)
+- [x] `AskUserQuestion` on the four things the repo could not decide: how to handle the
+      unfinished S6/S7, which S9 gates are done (**none**), whether to soften any number
+      (**publish everything**), and the hero visual (`charts/label_distribution.png`)
+- [x] `src/stats.py` → `results/corpus_stats.json` — **not in the docs prompt, added because
+      the honesty rule demanded it.** `data/` is gitignored, so every corpus and teacher figure
+      in the write-up was backed only by prose in this file and `SYNC.md`. Now recomputed from
+      the JSONL into a committed artifact.
+- [x] Run the eval harness in its `--skip-student` mode to score the incumbent arm end to end —
+      no model load, so it was safe to run alongside the live training job
+- [x] Wire `cost.breakdown()` into `results/summary.json` so quality, latency and cost cite one
+      artifact and the list-price disclaimer cannot be separated from the number
+- [x] `README.md` rewritten to the docs prompt's structure: hook · hero chart · run command ·
+      results table · badges · what it does · Mermaid architecture · how it was built ·
+      evidence table · usage · limitations · status · licence
+- [x] `PROJECT.json` — every `metrics[].source` and `headline.source` verified to exist
+- [x] `LICENSE` (MIT, matching `ctxbench` and `mcpaudit`) with the vendored-Geist and
+      model-licence notes
+- [x] `.github/workflows/ci.yml` — macOS runner, because `mlx` has no Linux wheel and a ubuntu
+      job could not even resolve the dependency set. Includes a grep gate asserting the
+      reserved amber `#FF9500` never reaches a chart.
+- [x] Verification pass: every local link and image resolves, every anchor exists, and every
+      number in the README checked against its artifact programmatically
+- [⏭] `METHODOLOGY.md` — it is an **S8 deliverable** and S8 has not run. Writing it now would
+      mean writing the corpus/split/prompt protocol twice, since it has to be revised the
+      moment the student's numbers land. The README links `masterplan.md` and `SYNC.md` for
+      the protocol in the meantime.
+- [⏭] CI badge in the README — the workflow is committed, but there is no GitHub remote, so
+      the badge would 404. It goes in when the repo is published at S9.
+- [⏭] `docs/media/` recorded terminal demo — the demo worth recording is the three-arm eval,
+      which cannot run until S7.
+
+**Acceptance:** every number in the README traceable to a committed artifact · `PROJECT.json`
+validates and every source path exists · no badge that 404s · limitations prominent · no
+student number published while the student is unevaluated. — **PASSED**
+
+**As-shipped delta:**
+- **The docs pass caught a live defect in the cost model, which is the sprint's most valuable
+  finding.** Writing the cost section required checking `src/cost.py`'s token constants, and a
+  parallel session re-tokenised all 500 held-out prompts through each arm's real prompt
+  builder. **All four constants were wrong, in both directions:** student input understated at
+  32 against a measured 35.98, teacher output overstated at 10 against 6.51. The 32 came from
+  A3's *training-example* figure, which is a different quantity from an inference-time input.
+  The published headline moves **45.4× → 41.3×**. `cost.py` now reads
+  `results/token_counts.json` and raises if it is absent, so it cannot fall back to a constant.
+  Both sessions measured the student's output token count independently and agreed at 1.51.
+- **A3's `9.3×` is superseded.** The measured input ratio is 302.98 / 35.98 = **8.42×**, and
+  the whole-request token ratio is **8.26×**. A3's 9.3× was computed from the training-example
+  tokenisation and remains correct for what it describes; it is not the per-request figure the
+  cost table needs. Recorded here rather than edited in place.
+- **The incumbent arm is now scored end to end, which the plan had left to S7.** `--skip-student`
+  needs no model, so it ran safely during training: **macro-F1 0.3372, accuracy 0.3420**, with
+  `consumer` at **0.000 F1 on 34 held-out examples** — the rule never fires once, because
+  `amazon` is matched by the tech branch above it. Precision is high where it fires
+  (entertainment 1.000) and recall is not (0.129); `general` inverts it at precision 0.173,
+  recall 0.985. All five top confusions are the same confusion, `X → general`.
+- **A stale count corrected: the catalog is 63 production feeds, not 61.** `CLAUDE.md` and the
+  old `README.md` both said 61; `src/feeds.py` and this file say 63, and `len(FEEDS)` is 63.
+  The README now says 63. Likewise the committed `EXPANSION_FEEDS` is **83**, not the 84 this
+  file records — 86 were probed and 84 returned items, but `skysports.com` was then dropped for
+  introducing an outlet outside the production catalog, so 83 is what ships.
+- **Two coordinating sessions, one repo.** A parallel session owned S6/S7 while this one owned
+  documentation. It flagged an active training run peaking at 31.8 GB and asked for no model
+  loads; every command run here was regex- or tokeniser-only. Shared-file writes to this file
+  and `SYNC.md` were sequenced by explicit hand-off rather than by hoping.
+- Also learned from that session: the **first full training run died at ~iter 1,170/1,200 in a
+  macOS GPU-driver kernel panic** (`IOGPUGroupMemory.cpp:323`), taking its stdout log with it.
+  That is why the last checkpoint on disk is iteration 1,000 and why there is no loss curve to
+  commit yet. The README's Status section says so plainly rather than implying a clean run.
+- Teacher token counts are measured with the **student's** tokeniser, because the teacher's
+  22 GB were deleted in S4. Same Qwen family, not the same file. The caveat is written into
+  `results/token_counts.json` so it travels with the number.
+- **The tests badge carries no count, deliberately.** It went 93 → 132 → 133 → 138 inside this
+  sprint as the parallel session added the chart-guard and provenance suites. A hand-maintained
+  count in a README is stale the moment anyone writes a test, and a stale number in the one
+  document that promises every number is backed is worse than no number. The badge reads
+  `tests · pytest` and links the suite; the exact figure lives in `SYNC.md`'s Sprint D
+  verification, where a point-in-time snapshot is the correct form. **When the repo goes public
+  at S9 the badge should be swapped for the live CI status badge**, which is the only version
+  that cannot drift.
+- The README's run command is `uv run python -m src.reproduce --skip-student`, the pipeline the
+  parallel session built during this sprint — one command that regenerates every result and
+  chart in dependency order, and deliberately does not train.
+
+- **Sprint D was reopened after S6/S7 landed, and the README was completed rather than left
+  pending.** The four `pending` cells are filled: student **macro-F1 0.8400 · accuracy 0.8540 ·
+  p50 327 ms · p95 402 ms · 0 invalid**. Three findings were added that did not exist when this
+  sprint first closed:
+  1. **The student loses exactly one class to the incumbent** — `general` recall 0.682 vs 0.985 —
+     and per CLAUDE.md's rule it leads rather than being buried. It sits directly under the results
+     table with the mechanism attached: the regex earns 0.985 by answering `general` for 75% of
+     everything, at 0.173 precision, and loses the same class on F1 0.295 to 0.698. The rule was
+     honoured without letting the mechanism delete the loss or the loss overstate itself.
+  2. **Checkpoint selection is worth +8.0 macro-F1 points** (0.8400 at iter 800 vs 0.7599 at the
+     final iter 1200), chosen on the 160-example validation split alone. Both evaluations are
+     linked from the README, not just the flattering one.
+  3. **A correction to this pass's own prose:** the end-of-run loss rise was first written up as
+     "mild overfitting". Checking `runs/current/loss.jsonl` showed mean *training* loss rising too
+     (0.072 → 0.26) alongside validation (0.075 → 0.280), which makes it an **optimisation
+     excursion**, not overfitting. Corrected before publication.
+- The README's hero stays `charts/label_distribution.png` per Bruno's choice;
+  `confusion_regex.png`, `confusion_student.png` and `training_curve.png` are placed in the
+  sections whose argument they carry.
+- One process note worth keeping: a terminal transcript was drafted for the Usage section with
+  plausible `[eval] student 100/500` progress lines that **had not actually been captured** — this
+  session never ran the student eval. It was caught before publication and replaced with the arm
+  table reproduced from `results/summary.json`. Inventing realistic-looking captured output is a
+  failure mode the honest-claims rule does not explicitly name, and it should.
+
+**Deferred:** the three `[⏭]` items above, all blocked on S7 or on the S9 publish gate.
+`METHODOLOGY.md` remains S8's. The tests badge stays countless until CI can generate it.
 
 ---
 
@@ -697,3 +1006,46 @@ S7 cost table as a result rather than being suppressed as a confound.
 
 The shape lives in one function — `student_messages()` in `src/prepare_training.py` — which
 `src/evaluate.py` imports, so training and evaluation cannot drift apart.
+
+**A4 · 2026-08-15 · Three feed counts in this file and in `CLAUDE.md` were wrong. No measured
+result moves.**
+
+Found during the Sprint D documentation pass, while checking every number the README was about
+to cite against the code that produces it. Recorded here rather than edited in place, per this
+file's append-only rule.
+
+| claim | where it appeared | ground truth (`src/feeds.py`) |
+|---|---|---|
+| "61 public RSS feeds" | this file ×2 (¶1 and D3), `CLAUDE.md` ×2, old `README.md` | **`len(FEEDS)` = 63** |
+| "86 candidates probed, 84 live" → read as 84 shipped | S2 As-shipped delta | **`len(EXPANSION_FEEDS)` = 83** |
+| "the expansion adds 11 sports and 17 science" | S2 As-shipped delta | 11 sports, **15 science** |
+
+The 63 is a transcription slip that propagated. `src/feeds.py`'s own docstring says "63 feeds
+across 9 editorial sections" and its S2 task line here says 63, but **the one-paragraph version
+at the top of this file and D3 in the locked-decisions table both still say 61**, as did
+`CLAUDE.md` and the old README. `CLAUDE.md` and the README have been corrected to 63; the two
+occurrences in this file are left standing because this file is append-only, and this amendment
+is the correction of record for them. A reader who hits the 61 in ¶1 or D3 should read it as 63.
+Nothing about D3's actual decision — rebuild from the production catalog, zero credentials —
+depends on the count.
+
+The 84 is not a slip, it is two different quantities collapsed into one. 86 section-feed
+candidates were probed and **84 returned items** — that is the number the S2 delta records, and
+it is correct. But `skysports.com` was then dropped for introducing an outlet outside the
+production catalog, so **83** is what ships. `63 + 83 = 146`, which is exactly the "146 feeds
+attempted" already recorded in S2's `record_verification`, so the ledger was internally
+consistent all along and only the prose was ambiguous.
+
+**Why this changes nothing measured, stated so nobody has to take it on faith.** Every number
+downstream is computed from the harvested corpus or from `ALL_FEEDS` at runtime — never from
+these prose counts. `src/harvest.py` iterates `feeds.ALL_FEEDS`; `src/stats.py` recomputes the
+distribution figures from `data/*.jsonl`; the `assert` in `src/feeds.py` and the test in
+`tests/test_corpus.py` enforce the no-new-outlet rule against the tuple itself. The corpus is
+still 3,706 headlines from 54 live outlets, the held-out 500 is unchanged, and no label,
+score, latency or cost figure is touched. This is a documentation defect, not a data one.
+
+**The rule it suggests, for the remaining sprints:** a count that appears in prose and also
+exists in code should be cited from the code. That is the reasoning behind `src/stats.py` and
+`results/corpus_stats.json`, added in the same pass — the figures that back the write-up are now
+recomputed into a committed artifact rather than transcribed by hand into three files that can
+each drift separately.

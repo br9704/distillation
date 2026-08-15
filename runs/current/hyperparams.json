@@ -1,0 +1,102 @@
+{
+  "run": "runs/current",
+  "log": "runs/current/train.log",
+  "command": "uv run python -m mlx_lm lora -c configs/lora.yaml",
+  "base_model": "mlx-community/Qwen3.5-4B-bf16",
+  "base_model_revision": "491fdc7c087ba7fb48adcb1253f8e76d011db783",
+  "student_prompt": {
+    "prompt_version": "v1",
+    "valid_fraction": 0.05,
+    "split_seed": 20260814
+  },
+  "config": {
+    "model": "mlx-community/Qwen3.5-4B-bf16",
+    "revision": "491fdc7c087ba7fb48adcb1253f8e76d011db783",
+    "train": true,
+    "data": "data/mlx",
+    "fine_tune_type": "lora",
+    "optimizer": "adamw",
+    "lora_parameters": {
+      "keys": [
+        "self_attn.q_proj",
+        "self_attn.v_proj"
+      ],
+      "rank": 16,
+      "scale": 20.0,
+      "dropout": 0.0
+    },
+    "num_layers": 16,
+    "batch_size": 8,
+    "iters": 1200,
+    "learning_rate": "1e-5",
+    "max_seq_length": 128,
+    "mask_prompt": true,
+    "steps_per_report": 1,
+    "steps_per_eval": 100,
+    "val_batches": 20,
+    "save_every": 200,
+    "adapter_path": "runs/current/adapters",
+    "seed": 20260814
+  },
+  "dataset": {
+    "train": {
+      "path": "data/mlx/train.jsonl",
+      "rows": 3046,
+      "sha256": "64a4160171674fb17262304584b4445293bc162caebda062d82df98235784da0"
+    },
+    "valid": {
+      "path": "data/mlx/valid.jsonl",
+      "rows": 160,
+      "sha256": "7636ec663f2cf4606ea91e5198a118432a3654b91af31e202e0b43ea94324a70"
+    },
+    "test": {
+      "path": "data/mlx/test.jsonl",
+      "rows": 500,
+      "sha256": "a368c5be5802eadc552f31d52cb9397104ddc2d3fc0f81e56f688812698dde61"
+    }
+  },
+  "versions": {
+    "python": "3.12.13",
+    "platform": "Darwin 25.5.0 (arm64)",
+    "mlx": "0.32.0",
+    "mlx-lm": "0.31.3",
+    "mlx-metal": "0.32.0",
+    "transformers": "5.15.0",
+    "numpy": "2.5.2"
+  },
+  "git": {
+    "commit": "39333c7e3b600c39627db2cf7608d6ab5ae9c2ca",
+    "branch": "main",
+    "dirty": true
+  },
+  "run_facts": {
+    "reported_steps": 1200,
+    "val_evaluations": 13,
+    "nan_report_windows": 4,
+    "nan_at_iters": [
+      85,
+      100,
+      423,
+      949
+    ],
+    "completed": true,
+    "final_weights": "runs/current/adapters/adapters.safetensors.",
+    "last_iter": 1200,
+    "peak_mem_gb": 43.911,
+    "trained_tokens": 61910,
+    "trainable_parameters": {
+      "percent": 0.022,
+      "trainable_millions": 0.918,
+      "total_millions": 4205.75
+    },
+    "median_it_per_sec": 0.313,
+    "wall_clock_estimate_s": 3833.9,
+    "first_train_loss": 5.334,
+    "final_train_loss": 0.196,
+    "min_train_loss": 0.0,
+    "loss_decreased": true,
+    "first_val_loss": 5.604,
+    "final_val_loss": 0.28,
+    "min_val_loss": 0.075
+  }
+}

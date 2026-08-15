@@ -34,7 +34,10 @@ max_seq_length: 128  # lean prompts render to ~32 tokens (A3); ample headroom fo
 # a system prompt it will always be given.
 mask_prompt: true
 
-steps_per_report: 25
+# Report every step, not every 25. masterplan S6 asks for "every step's loss" in
+# runs/<id>/loss.jsonl, and the first run's 25-step cadence gave 48 points for a 1200-step
+# curve. This is a logging cadence only — it changes no training arithmetic.
+steps_per_report: 1
 steps_per_eval: 100
 val_batches: 20
 save_every: 200

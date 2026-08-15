@@ -389,3 +389,284 @@ with `aethereum status`.)
 >   leakage assertion passes (500 held-out ids absent from train+valid) — PASS
 > - `configs/lora.yaml` committed, fully specifying the S6 run — PASS
 > - Evidence: `/tmp/smoke_adapter/adapters.safetensors`, `configs/lora.yaml`, S5 commit.
+
+---
+
+## S6 — Train
+
+> Ledger note: the first S6 working session produced two commits (`61af2e3`, `39333c7`) and
+> no ledger entries. These four are written retroactively, dated to when the decision was
+> actually taken, and the omission is recorded rather than papered over.
+
+**2026-08-15 · `share_intent`**
+> LoRA fine-tuning Qwen3.5-4B on the 3,046 teacher-labelled training examples, then merging
+> the adapter and running 20 sanity predictions. Produces `runs/current/loss.jsonl`,
+> `runs/current/hyperparams.json` and `charts/training_curve.png`.
+
+**2026-08-15 · `record_decision` — the student gets a lean prompt (REVERSES the S5 decision above)**
+> The student is trained and evaluated on `Outlet:/Headline:` alone, with no system block.
+> Recorded in full as `AMENDMENT A3` in `masterplan.md`. **This supersedes the S5 entry
+> "student keeps the teacher's full system prompt"** three entries up, which should be read as
+> closed, not current.
+> **Why:** the trigger was runtime — 299 tokens per example with the system block against 32
+> without, i.e. the same 262-token instruction repeated 3,046 times per epoch, projecting a
+> ~10 h run against the brief's 1 h cap; lean runs at 0.30 it/s ≈ 70 min. But the design
+> argument is the stronger one and stands on its own: **a distilled student is supposed to
+> stop needing the instructions** — that is what "the task is in the weights" means. Making it
+> re-read 262 tokens per call would understate the distillation win in exactly the place this
+> project measures it, input tokens per request. Both arms still see identical information
+> (outlet + headline) and the identical held-out 500, so the quality comparison is untouched.
+> The 9.3x input-token drop is a **result for the S7 cost table, not a confound to suppress**.
+> The shape lives in one function, `student_messages()` in `src/prepare_training.py`, which
+> `src/evaluate.py` imports so training and eval cannot drift.
+
+**2026-08-15 · `record_decision` — cost is priced on published per-parameter-tier rates**
+> Fireworks serverless list price: **$0.10/1M under 4B**, **$0.50/1M for MoE up to 56B**, flat
+> across input and output, retrieved 2026-08-15. Cross-checked against Together's list
+> (Qwen3.5-9B $0.17/$0.25; Qwen3.5-397B-A17B $0.60/$3.60).
+> **Why:** it is the rare case where a published rate applies to a *specific open model* by
+> tier rather than requiring a guess, so both arms land in a tier without interpretation.
+> Token counts are **measured with the real tokeniser on the real rendered prompts**, not
+> estimated. Two sensitivity rows are reported *because they cut against the headline*: had
+> the student kept the teacher's full prompt it would be 5.1x cheaper rather than 45.4x (A3 is
+> worth 9x of the 45x), and Qwen3.5-4B is 4.21B params — just over the sub-4B tier boundary —
+> so billed one tier up it is 9.1x cheaper, which is the pessimistic read and is published as
+> such. **No money changed hands: every arm ran locally at $0**, and that disclaimer travels
+> with the number into `results/summary.json` and the README.
+
+**2026-08-15 · `record_decision` — loss is reported every step, not every 25**
+> `steps_per_report` lowered from 25 to 1 in `configs/lora.yaml` for the re-run.
+> **Why:** masterplan S6 asks for "every step's loss" in `runs/<id>/loss.jsonl`, and a 25-step
+> cadence yields 48 points for a 1,200-step curve. Logging cadence only — it changes no
+> training arithmetic, and the seed, data, and all hyperparameters are otherwise identical.
+
+**2026-08-15 · `record_decision` — the interrupted run is discarded and retrained from scratch**
+> The first full run died at ~iter 1170 of 1200 when the machine **kernel-panicked in the GPU
+> driver** (`IOGPUGroupMemory::remove_memory_object()`, `IOGPUGroupMemory.cpp:323`; panicked
+> task `python3.12`, 25 GB resident) at 05:02:41. Adapters through iter 1000 are preserved at
+> `runs/interrupted-panic-20260815/` and are not used.
+> **Why:** the run logged to `/tmp/train.log` and the reboot cleared `/tmp`, so the loss
+> history for iters 1–1000 is **unrecoverable**. `mlx-lm` can resume from a checkpoint, but it
+> restarts the iteration counter and does not checkpoint optimiser state, so a resumed run is
+> neither an uninterrupted run nor one whose curve can be honestly plotted. A curve assembled
+> from a lost log would violate the honest-claims rule. Retraining costs ~70 minutes and is
+> the only path to a defensible `loss.jsonl`. **The re-run logs to `runs/current/train.log`,
+> inside the repo, so a reboot cannot take it again.**
+
+---
+
+## Sprint D — Documentation
+
+**2026-08-15 · `share_intent`**
+> Making the repo read well to a stranger on GitHub: README rewritten to the
+> `DOCS-ENGINEERPROMPT.md` structure, `PROJECT.json` for the portfolio to consume, LICENSE, CI,
+> and a committed artifact behind every number. Documentation only — no engineering scope, and
+> no model loads, because a parallel session owns the live S6 training run.
+
+**2026-08-15 · `ask_human` — four questions, all answered**
+> 1. *S6/S7 are unfinished and there are no student results. Document now, or finish first?*
+>    → **Document now, results pending.** The student row stays empty rather than estimated.
+> 2. *Which S9 owner gates are done?* → **None.** No GitHub remote, no HF repo. Every
+>    `links.*` in `PROJECT.json` is `null` and nothing is published.
+> 3. *Any number to hold back or soften?* → **Publish everything**, including the six named
+>    defects in the production regex and the NHK podcast-feed defect in the live catalog.
+> 4. *Hero visual?* → `charts/label_distribution.png`.
+
+**2026-08-15 · `record_decision` — a committed stats artifact, because `data/` is gitignored**
+> Added `src/stats.py`, which recomputes every corpus and teacher figure from the JSONL and
+> writes `results/corpus_stats.json`.
+> **Why:** the honest-claims rule says no number in the README that a committed artifact cannot
+> back. `data/` is correctly gitignored — it is large and regenerable — but that left the
+> corpus counts, the 74.2%, the 82.7% reassignment and the teacher's p50/p95 backed only by
+> prose in `masterplan.md` and this ledger. Prose is a claim; a regenerable JSON file is a
+> receipt. It also served as a check on the ledger: every figure reproduced, and the 74.2% was
+> confirmed to be measured on the 3,706 labelled rows rather than the 3,812 now in
+> `corpus.jsonl`, which the artifact now states explicitly.
+
+**2026-08-15 · `record_decision` — no student number is published while the student is unevaluated**
+> The results table carries four `pending` cells for the student's quality and latency.
+> **Why:** the training run that produced the adapter on disk died in a kernel panic, S7 has
+> never run, and `results/summary.json` carries `student_evaluated: false`. A projected number
+> is not a number. Cost is the one exception and is published — it is arithmetic over token
+> counts measured on the rendered prompts, so it does not depend on the student having been
+> evaluated, and the README says so in a footnote rather than letting a reader assume the whole
+> row is measured.
+
+**2026-08-15 · `record_verification` — the cost model was wrong and is now artifact-backed**
+> Writing the cost section required checking `src/cost.py`'s four hardcoded token constants.
+> Re-tokenising all 500 held-out prompts through each arm's real prompt builder found **all
+> four wrong, in both directions**:
+>
+> | | hardcoded | measured (mean, n=500) |
+> |---|---|---|
+> | teacher input | 299 | **302.98** |
+> | teacher output | 10 | **6.51** |
+> | student input | 32 | **35.98** |
+> | student output | 2 | **1.51** |
+>
+> - Root cause: the student's 32 was A3's **training-example** figure (user turn + answer),
+>   which is a different quantity from an inference-time input. — CONFIRMED
+> - Published headline moves **45.4× → 41.3×** cheaper; 2.20% → **2.42%** of teacher cost. Both
+>   sessions measured the student's output independently and agreed at **1.51**. — CONFIRMED
+> - `src/cost.py` now reads `results/token_counts.json` and raises if it is absent, so it can
+>   no longer silently fall back to a constant. — CONFIRMED
+> - **A3's `9.3×` is superseded** for cost purposes: the measured per-request token ratio is
+>   **8.26×**. A3 remains correct for the training-example quantity it describes.
+> - Caveat that travels with the number: the teacher's weights were deleted in S4, so its
+>   prompts are tokenised with the **student's** tokeniser — same Qwen family, not the same
+>   file. Recorded in `results/token_counts.json`.
+
+**2026-08-15 · `record_verification` — the incumbent arm, scored end to end**
+> `src/evaluate.py --skip-student` loads no model, so it ran safely alongside the live training
+> job. On the held-out 500, gold = teacher label:
+> - **macro-F1 0.3372 · accuracy 0.3420 · 0 invalid outputs** — PASS
+> - **`consumer` F1 0.000 on 34 held-out examples.** The rule never fires once, because
+>   `amazon` is matched by the tech branch above it — dead code in production, now measured
+>   rather than inferred from reading the source.
+> - Precision is high where it fires and recall is not: entertainment P 1.000 / R 0.129,
+>   sports P 0.929 / R 0.250, geopolitics P 0.826 / R 0.196. `general` inverts it at
+>   P 0.173 / R 0.985.
+> - All five top confusions are the same confusion, `X → general`: geopolitics 78, science 59,
+>   entertainment 50, sports 39, finance 31.
+> - Evidence: `results/summary.json`, `results/predictions.jsonl`.
+
+**2026-08-15 · `record_verification` — Sprint D gate**
+> - `pytest`: **138 passed** — PASS (93 at sprint start; the parallel S6/S7 session
+>   added the chart-guard and provenance suites mid-sprint)
+> - Every local link, image and anchor in `README.md` resolves — PASS (checked mechanically)
+> - Every README number checked against its artifact programmatically: per-class table vs
+>   `summary.json`, scalars vs `corpus_stats.json`, section counts vs `src/feeds.py` — PASS
+> - `PROJECT.json` validates; all 8 `metrics[].source` paths and `headline.source` exist;
+>   `honest` non-empty — PASS
+> - No badge that 404s: static badges only, and the CI badge is withheld until the repo has a
+>   remote — PASS
+> - `.github/workflows/ci.yml` committed, including a gate asserting the reserved amber
+>   `#FF9500` never reaches a chart. Gate verified locally — PASS
+> - **Two stale counts corrected:** the production catalog is **63** feeds, not the 61 in
+>   `CLAUDE.md` and the old README; committed `EXPANSION_FEEDS` is **83**, not 84 (86 probed,
+>   84 returned items, `skysports.com` then dropped for introducing a new outlet).
+> - Evidence: `README.md`, `PROJECT.json`, `results/corpus_stats.json`, `results/summary.json`,
+>   `LICENSE`, `.github/workflows/ci.yml`, Sprint D block in `masterplan.md`.
+
+**2026-08-15 · `record_decision` — `METHODOLOGY.md` is deferred, not forgotten**
+> **Why:** it is an S8 deliverable and S8 has not run. Writing the corpus, split, prompt and
+> audit protocol now would mean writing it twice, because it has to be revised the moment the
+> student's numbers land. `README.md` links `masterplan.md` and this ledger for the protocol
+> until then, and says so explicitly rather than leaving a dead link.
+
+**2026-08-15 · `record_decision` — AMENDMENT A4, three feed counts corrected**
+> `masterplan.md` A4 records that "61 public RSS feeds" (this appeared in the masterplan's
+> one-paragraph version and D3, in `CLAUDE.md` twice, and in the old README) should be **63**;
+> that the committed `EXPANSION_FEEDS` is **83**, not the 84 the S2 delta implies; and that the
+> expansion adds **15** science feeds, not 17.
+> **Why an amendment rather than an edit:** `masterplan.md` is append-only, and A2 is the
+> precedent — it corrected a planning figure (19 GB → 22 GB) the same way. `CLAUDE.md` and the
+> README are not append-only and were corrected in place.
+> **Why nothing measured moves:** every downstream number is computed from the harvested corpus
+> or from `feeds.ALL_FEEDS` at runtime, never from these prose counts. `63 + 83 = 146`, which
+> matches the "146 feeds attempted" already in S2's `record_verification` — the ledger was
+> internally consistent and only the prose was ambiguous, because "84 live" was a probe result
+> and 83 is what shipped after `skysports.com` was dropped for introducing a new outlet.
+> **The rule it suggests:** a count that exists in code should be cited from code. That is what
+> `src/stats.py` → `results/corpus_stats.json` now does for the figures backing the write-up.
+
+---
+
+## S6 — Train (close)
+
+**2026-08-15 · `record_decision` — `num_layers: 16` trains FOUR layers, not sixteen**
+> Read off the adapter's own safetensors header, no model load required: 16 tensors,
+> **917,504 params (0.918M)**, touching layers **19, 23, 27, 31** only, `self_attn.q_proj` and
+> `self_attn.v_proj` on each.
+> **Why it happens:** Qwen3.5-4B is a hybrid architecture — `full_attention_interval: 4`, so 24
+> of its 32 layers are `GatedDeltaNet` linear-attention blocks with no `self_attn.q_proj` to
+> attach to. `num_layers: 16` selects the last 16 layers, of which exactly four carry the
+> targeted modules. The config reads as though sixteen layers are tuned; four are.
+> **Why it is recorded rather than fixed:** the run is valid and the result is strong. It also
+> reconciles the discrepancy with S5's recorded `0.096% (4.058M)`, which came from the probe
+> under a different key set. The authoritative figure for S6 is **0.022% (0.918M of
+> 4,205.75M)**. "The student learns this task with 0.022% of its parameters trainable" is a
+> stronger claim than the one the plan assumed, not a weaker one.
+
+**2026-08-15 · `record_decision` — the student ships from iter 800, not the final iter 1200**
+> Validation loss bottomed at **0.075** (iters 500 and 800) and blew out to **0.280** across
+> the last 200 iterations; train loss rose with it (0.127 → 0.219), so this is an optimisation
+> excursion rather than overfitting. `src/select_checkpoint.py` materialises the chosen
+> checkpoint as a loadable adapter directory, which `mlx-lm` does not otherwise provide.
+> **Why:** measured at **+8.0 macro-F1** — 0.8400 at iter 800 versus **0.7599** at iter 1200.
+> Shipping mlx-lm's default final weights would have discarded a tenth of the model's quality.
+> **The leak this could have been, and was not:** selection reads ONLY the 160-example
+> validation split carved from the training pool. The held-out 500 take no part — the module
+> never opens that file, and it refuses any iteration with no checkpoint on disk (iter 500 also
+> hit 0.075 but had none, so it was not selectable). Selecting on the test set would have made
+> the project's headline number worthless.
+> **Both are published:** `results/summary.json` (iter 800) and
+> `results/summary_final_checkpoint.json` (iter 1200), with the full ranking in
+> `runs/current/best/selection.json`.
+
+**2026-08-15 · `record_verification` — S6 gate**
+> - Loss decreases: train 5.334 → 0.196; val 5.604 → **0.075** at the selected checkpoint — PASS
+> - Curve committed: `charts/training_curve.png`, 1,200 train + 13 val points, 4 nan report
+>   windows (iters 85, 100, 423, 949) drawn as marked gaps rather than dropped — PASS
+> - Adapter loads standalone: 500 held-out predictions, **0 unparseable** — PASS
+> - 20 sanity predictions parse: **20/20 valid**, 17/20 agree with the teacher, run against the
+>   **merged** weights — PASS
+> - Hyperparams + dataset hash recorded: `runs/current/hyperparams.json` — pinned revision,
+>   sha256 per split, mlx 0.32.0 / mlx-lm 0.31.3, git commit + dirty flag — PASS
+> - Runtime: 1,200 iters at 0.313 it/s ≈ **64 minutes**, inside the brief's 2 h cap — PASS
+> - Merged: `models/student-merged`, 7.9 GB, gitignored — PASS
+> - Evidence: `runs/current/{train.log,loss.jsonl,hyperparams.json,best/selection.json}`,
+>   `charts/training_curve.png`, `results/sanity_20.json`.
+> - **Third attempt.** Run 1 died at ~iter 300 (pre-A3). Run 2 reached ~iter 1170/1200 and was
+>   killed by a macOS GPU-driver kernel panic that rebooted the machine and cleared `/tmp`,
+>   taking its entire loss log. Run 3 logged inside the repo. **Peak memory 43.911 GB of 48 GB.**
+
+---
+
+## S7 — Evaluate (close)
+
+**2026-08-15 · `record_decision` — the cost model reads a measured artifact or refuses to run**
+> `src/cost.py` hardcoded four token constants beneath a docstring claiming they were "measured
+> with the real tokeniser". They were not. Two were wrong in the direction that flattered the
+> headline: student input **32** against a measured **35.98** (the 32 was A3's figure for a
+> whole training *example*, a different quantity), and teacher output **10** against a measured
+> **6.51**. `src/measure_tokens.py` now derives all four from the real tokeniser over all 500
+> held-out rows into `results/token_counts.json`; `cost.py` reads it and raises
+> `FileNotFoundError` if it is absent rather than falling back.
+> **Why it matters:** the corrected headline is **41.3x cheaper / 2.42% of teacher cost**, not
+> the **45.4x / 2.20%** previously committed. A ~9% overstatement of the project's headline
+> claim, caught only because the number was checked against the tokeniser it claimed to come
+> from. Output counts are weighted by the actual gold label distribution rather than counting
+> each class once, since the classes are not equally likely.
+> **Disclosed limitation:** the teacher's weights were deleted in S4, so its token counts are
+> measured with the student's tokeniser (same Qwen family). That caveat is a field inside
+> `token_counts.json`, so it travels with the number.
+
+**2026-08-15 · `record_decision` — the outlet-TIER breakdown is not shipped, and nothing is invented**
+> S7 asks for a headline-length and outlet-tier breakdown of student error. Length shipped.
+> **Tier did not, because no tier taxonomy exists in this repo** — `Feed` is
+> `(outlet, url, section)` and `data/heldout.jsonl` has no `tier` field, so the column would
+> have read `unknown` for all 500 rows while looking like a result.
+> **Why not just author one:** ranking 54 outlets by editorial prestige would be fabricating
+> data to satisfy a checkbox, and every downstream sentence would inherit it. Shipped instead:
+> per-outlet agreement (real) and a **volume band** cut on held-out counts, labelled inside the
+> artifact as a stated proxy for prominence rather than an editorial judgement.
+
+**2026-08-15 · `record_verification` — S7 gate**
+> - Three arms x three metrics — PASS
+>   `student macro-F1 0.8400 · accuracy 0.8540 · p50 327.1 ms · p95 402.4 ms · 0 unparseable`
+>   `regex   macro-F1 0.3372 · accuracy 0.3420`
+>   `teacher quality n/a by construction (84% hand audit) · p50 781.8 · p95 867.7`
+>   `cost: teacher $0.1547/1k · student $0.0037/1k · regex $0 — 41.3x, list price, $0 spent`
+> - Confusion matrices committed: `charts/confusion_regex.png`, `charts/confusion_student.png` — PASS
+> - Error taxonomy in prose: `results/error_analysis.md` — PASS
+> - Every number traceable to a committed artifact — PASS
+> - **The student loses one class and it leads:** `general` recall 68.2% vs the regex's 98.5%.
+>   The regex reaches that at **17.3% precision**, answering `general` for 375 of 500. On F1 the
+>   ordering reverses (0.698 vs 0.295) and the student loses no class. Both flags are reported
+>   separately so neither framing swallows the other.
+> - The student's genuine weakness: **`consumer` recall 52.9%**, most often called `tech` — a
+>   milder inheritance of the `Amazon Prime Day → tech` bug this project opens with.
+> - Student right where the regex is wrong: **285**. Regex right where the student is wrong: **29**.
+> - Evidence: `results/{summary.json,summary_final_checkpoint.json,predictions.jsonl,
+>   error_analysis.json,error_analysis.md,token_counts.json,sanity_20.json}`. 139 tests green.

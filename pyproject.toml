@@ -2,6 +2,11 @@
 name = "distillation"
 version = "0.1.0"
 description = "LoRA-distilling a live production news classifier from a large open teacher into a ~4B model"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Bruno Jaamaa", email = "jaamaabruno@gmail.com" }]
+keywords = ["distillation", "lora", "mlx", "qwen", "text-classification", "apple-silicon"]
 # System Python is 3.14, which is too new for the ML wheels. Pinned to 3.12.
 requires-python = ">=3.12,<3.13"
 dependencies = [
@@ -11,11 +16,19 @@ dependencies = [
     "pydantic>=2.9",
     "matplotlib>=3.9",
     "numpy>=1.26",
+    # Read at runtime by src/record_run.py and src/evaluate.py to recover the pinned base-model
+    # revision from configs/lora.yaml. mlx-lm happens to pull it in, but a result's provenance
+    # must not depend on a transitive dependency staying put.
+    "pyyaml>=6.0",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=8.3",
+    # Pillow is a test dependency, not a chart dependency: `tests/test_charts_guard.py` reads
+    # committed PNGs pixel by pixel to prove the reserved collision-alert amber never appears.
+    # Undeclared, that guard silently skips in CI — which is the same as not having it.
+    "pillow>=10.0",
 ]
 
 [tool.pytest.ini_options]

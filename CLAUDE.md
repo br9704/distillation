@@ -15,7 +15,7 @@ and it is structurally broken in ways visible in its own source: the `if` chain 
 first match, so `"Amazon Prime Day"` is `tech` rather than `consumer`, `"SpaceX launch"` is
 `tech` rather than `science`, and any headline containing `china` is `geopolitics` forever.
 
-This repo rebuilds that corpus from the same 61 public RSS feeds the product reads, labels
+This repo rebuilds that corpus from the same 63 public RSS feeds the product reads, labels
 ~5,000 headlines with a large open-weight teacher running locally, LoRA fine-tunes a ~4B
 open model on those labels, and reports quality, cost and latency for **three** arms —
 regex, teacher, student — on 500 headlines held out before a single label was generated.
@@ -149,7 +149,7 @@ distillation/
 ├── src/
 │   ├── schema.py              # TOPIC_CLASSES, Example, Label, Prediction  (CONTRACTS)
 │   ├── regex_baseline.py      # faithful port of classifyWireItem, bugs included
-│   ├── feeds.py               # the 61 production feed URLs + outlet + tier
+│   ├── feeds.py               # the 63 production feed URLs + outlet + tier
 │   ├── harvest.py             # async RSS fetch, dedup
 │   ├── gdelt.py               # historical backfill, 1 req/5s enforced
 │   ├── split.py               # held-out 500, stratified, disjointness asserted
@@ -222,9 +222,23 @@ Per Bruno's instruction, no gate interrupts S0–S8. Everything below waits for 
 
 > Update this line at the end of every sprint.
 
-**Current state:** **S0-S4 closed.** Corpus rebuilt (3,706 headlines, 54 outlets, zero
-credentials) and **fully labelled by the teacher at 0.00% unparseable**: 3,206 training +
-500 held-out. Teacher deleted, **27 GB free**. 93 tests passing.
+**Current state:** **S0–S7 closed · Sprint D (documentation) closed.** All three arms measured on
+the held-out 500. **Student macro-F1 0.8400 · accuracy 0.8540 · p50 327 ms · p95 402 ms · 0
+unparseable**, against the incumbent regex's 0.3372 / 0.3420 and the teacher's 782/868 ms. The
+student is **41.3× cheaper** than the teacher at list price and **2.4× faster**. 139 tests green.
+
+**The README is complete and every number in it is backed by a committed artifact.** `PROJECT.json`
+is at the root with `status: shipped`. S8 (`METHODOLOGY.md`, full write-up) and S9 (owner gates)
+remain — nothing is published, no remote exists.
+
+**Two results that matter more than the headline:**
+- **The student loses one class to the regex** — `general` recall 0.682 vs 0.985 — and per this
+  file's rule it leads the README. The regex earns it by answering `general` 75% of the time at
+  0.173 precision, and loses the same class on F1 (0.295 vs 0.698). On F1 the student wins all eight.
+- **Shipping the best-validation checkpoint instead of the final one is worth +8.0 macro-F1 points**
+  (0.8400 vs 0.7599). Selected on the 160-example validation split only; the held-out 500 was never
+  read by `src/select_checkpoint.py`. The last 200 iterations were an optimisation excursion — train
+  and validation loss rose together — not overfitting.
 
 **The numbers the write-up is built on:**
 - Of the 375 held-out headlines the regex calls `general`, the teacher reassigns **310 (82.7%)**.
@@ -241,6 +255,26 @@ credentials) and **fully labelled by the teacher at 0.00% unparseable**: 3,206 t
 audit's 84% as the teacher's estimated accuracy and states that student-vs-gold measures
 agreement, not correctness.
 
-**Next: S5 — probe `mlx-lm` LoRA on Qwen3.5-4B with 20 examples.** `qwen3_5` is already
-confirmed registered and to handle the multimodal `text_config` nesting, so the fallback
-ladder is expected to go unused.
+**The incumbent is now scored end to end** (`src/evaluate.py --skip-student`, no model load):
+**macro-F1 0.3372 · accuracy 0.3420**, with `consumer` at **0.000 F1 on 34 held-out examples** —
+the rule never fires once, because `amazon` is matched by the tech branch above it. Precision is
+high where it fires (entertainment 1.000) and recall is not (0.129).
+
+**Sprint D found a live defect in the cost model.** All four token constants in `src/cost.py`
+were wrong when re-measured over the real 500 held-out prompts — student input understated at 32
+against **35.98**, teacher output overstated at 10 against **6.51**. The published headline moves
+**45.4× → 41.3×** cheaper. `cost.py` now reads `results/token_counts.json` and raises if it is
+absent. **A3's `9.3×` is superseded for cost purposes**; the measured per-request ratio is 8.26×.
+
+**Two stale counts corrected:** the production catalog is **63** feeds, not 61 (this file said 61
+and now says 63); committed `EXPANSION_FEEDS` is **83**, not the 84 in `masterplan.md`.
+
+**Next: close S6.** The first full training run died at ~iter 1,170/1,200 in a macOS GPU-driver
+kernel panic and took its stdout log with it, so it is being retrained with the log inside the
+repo at `runs/current/train.log`. Then S7. Until the student is evaluated, **no student quality
+or latency number is published anywhere** — the README's student row is four `pending` cells.
+Cost is the one exception and is published, because it is arithmetic over measured token counts
+and does not depend on the evaluation having run.
+
+_(Historical: the S5 probe confirmed `qwen3_5` is registered and handles the multimodal
+`text_config` nesting. The fallback ladder went unused — option 1 won.)_

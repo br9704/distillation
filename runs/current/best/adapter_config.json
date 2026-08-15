@@ -1,0 +1,46 @@
+{
+    "adapter_path": "runs/current/adapters",
+    "batch_size": 8,
+    "clear_cache_threshold": 0,
+    "config": "configs/lora.yaml",
+    "data": "data/mlx",
+    "fine_tune_type": "lora",
+    "grad_accumulation_steps": 1,
+    "grad_checkpoint": false,
+    "iters": 1200,
+    "learning_rate": 1e-05,
+    "lora_parameters": {
+        "keys": [
+            "self_attn.q_proj",
+            "self_attn.v_proj"
+        ],
+        "rank": 16,
+        "scale": 20.0,
+        "dropout": 0.0
+    },
+    "lr_schedule": null,
+    "mask_prompt": true,
+    "max_seq_length": 128,
+    "model": "mlx-community/Qwen3.5-4B-bf16",
+    "num_layers": 16,
+    "optimizer": "adamw",
+    "optimizer_config": {
+        "adam": {},
+        "adamw": {},
+        "muon": {},
+        "sgd": {},
+        "adafactor": {}
+    },
+    "project_name": null,
+    "report_to": null,
+    "resume_adapter_file": null,
+    "revision": "491fdc7c087ba7fb48adcb1253f8e76d011db783",
+    "save_every": 200,
+    "seed": 20260814,
+    "steps_per_eval": 100,
+    "steps_per_report": 1,
+    "test": false,
+    "test_batches": 500,
+    "train": true,
+    "val_batches": 20
+}

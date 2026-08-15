@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "slug": "distillation",
+  "name": "DISTILLATION",
+  "oneLiner": "4B LoRA student hits 0.840 macro-F1 vs its 35B teacher at 41x lower cost",
+  "status": "shipped",
+  "role": "SOLO BUILD",
+  "year": "2026",
+  "updated": "2026-08-15",
+  "links": {
+    "github": null,
+    "live": null,
+    "npm": null,
+    "huggingface": null,
+    "appstore": null
+  },
+  "stack": [
+    "python",
+    "mlx",
+    "mlx-lm",
+    "lora",
+    "qwen3.5",
+    "ollama",
+    "pydantic",
+    "matplotlib",
+    "pytest",
+    "uv"
+  ],
+  "metrics": [
+    {
+      "value": "0.840",
+      "label": "student macro-F1 against the 35B teacher's labels, held-out 500",
+      "source": "results/summary.json"
+    },
+    {
+      "value": "41.3x",
+      "label": "cheaper than the teacher at list price, on measured token counts",
+      "source": "results/token_counts.json"
+    },
+    {
+      "value": "2.4x",
+      "label": "lower latency than the teacher, sequential and warm (327 ms vs 782 ms p50)",
+      "source": "results/summary.json"
+    },
+    {
+      "value": "0.337",
+      "label": "macro-F1 of the keyword classifier running in production today",
+      "source": "results/summary.json"
+    },
+    {
+      "value": "+8.0",
+      "label": "macro-F1 points from shipping the best-validation checkpoint, not the final one",
+      "source": "results/summary_final_checkpoint.json"
+    },
+    {
+      "value": "0.00%",
+      "label": "unparseable outputs — 3,706 teacher labels and 500 student predictions",
+      "source": "results/corpus_stats.json"
+    },
+    {
+      "value": "84%",
+      "label": "hand-audited teacher agreement — the ceiling, recorded before any student existed",
+      "source": "results/audit_50.md"
+    },
+    {
+      "value": "6",
+      "label": "defects in the production regex, each reproduced and pinned by a passing test",
+      "source": "tests/test_regex_baseline.py"
+    }
+  ],
+  "headline": {
+    "claim": "A 4B LoRA student reproduces its 35B teacher's judgement on 85.4% of held-out headlines at 2.42% of the list cost and 42% of the latency, while the keyword regex actually running in production scores 0.337 macro-F1 and cannot emit the `consumer` class even once in 500 headlines. The student wins all eight classes on F1 and loses exactly one on recall — `general`, where the regex scores 0.985 only because it answers `general` three times in four, at 0.173 precision.",
+    "source": "README.md#results"
+  },
+  "honest": "Gold labels are the teacher's own output, so the student's 85.4% measures agreement with the teacher, not correctness — the hand audit puts the teacher's own agreement with a human at 84%, which is the ceiling, and the two numbers must not be read as the student beating the teacher. The student loses to the incumbent regex on `general` recall (0.682 vs 0.985), though the regex earns that by answering `general` for 75% of everything at 0.173 precision. Its real weakness is `consumer` recall at 0.529 — the smallest class at ~190 training examples, exactly the tail-class cost AMENDMENT A1 predicted when the corpus target was lowered from 5,500 to 3,500. One training run, one seed, one machine, one 500-example held-out draw, so there is no variance estimate; treat the third decimal as noise. Headline-only and English-only. Cost is list-price arithmetic over measured token counts, not measured spend — everything ran locally at $0 — and 41.3x is the optimistic read: billed one parameter tier up it is 8.3x.",
+  "media": {
+    "hero": "charts/label_distribution.png",
+    "demo": null,
+    "diagram": "charts/confusion_student.png"
+  },
+  "built": {
+    "audit": "The production classifier is a first-match-wins keyword regex with six defects visible in its own source, and it sends 74.2% of the corpus to the `general` catch-all — each defect is now reproduced in a Python port and pinned by a passing test so a future fix fails loudly.",
+    "repaired": [
+      "A first training run died at ~iteration 1,170 of 1,200 in a macOS GPU-driver kernel panic and took its stdout log with it; rather than resume from a checkpoint — which restarts the iteration counter and yields a curve that cannot be honestly plotted — it was retrained from scratch with the log written inside the repo",
+      "A sixth defect nobody had noticed: every keyword is a bare noun and `\\b` demands a non-word character after it, so `Russian` never matches `russia`, `Chinese` never matches `china`, `Israeli` never matches `israel` — headlines use the adjectival form constantly and every one of them lands in `general`",
+      "The Python port needed `re.ASCII` to be faithful: JavaScript's `\\b` is ASCII-based and Python's is Unicode-aware, so without the flag the incumbent arm would have been quietly weaker than the thing actually in production — verified empirically on accented text, and the corpus includes DW, France24, SCMP and Haaretz",
+      "An architecture probe caught an unrelated silent failure: Qwen3.5-4B's chat template opens a `<think>` block at inference while training data carries a closed one, so the adapter returned 'Thinking Process:' for all five test cases; `enable_thinking=False` reproduces the training prefix byte-for-byte and the same adapter scored 5/5 correct",
+      "Ollama defaulted the teacher to a 32,768-token context for ~250-token prompts, driving the machine into 7.7 GB of swap and taking free disk from 12 GB to 4 GB mid-run; pinning num_ctx to 2048 stopped it, and 60 examples from before the change were re-labelled to prove it altered no label (60/60 identical)",
+      "Held-out membership is frozen on first split rather than re-drawn, so a background harvester that keeps adding rows can never leak into the evaluation set — impossible by construction instead of by remembering the rule"
+    ],
+    "measured": [
+      "The student reaches macro-F1 0.8400 / accuracy 0.8540 with zero unparseable outputs in 500, against the incumbent regex's 0.3372 / 0.3420 on the same held-out set",
+      "Selecting the best-validation checkpoint (iter 800) over mlx-lm's default final weights (iter 1200) is worth +8.0 macro-F1 points, 0.8400 vs 0.7599 — both evaluations committed, not just the flattering one",
+      "The last 200 training iterations were an optimisation excursion, not overfitting: validation loss went 0.075 to 0.280 and mean training loss rose with it, 0.072 to 0.26 — 1,200 iterations was too many",
+      "Head to head, the student is right where the regex is wrong 285 times; the regex is right where the student is wrong 29 times",
+      "53.4% of the student's 73 errors involve the `general` catch-all, which the S4 hand audit predicted before a student existed by identifying that the taxonomy has no `politics` class",
+      "Of the 375 held-out headlines the regex calls `general`, the teacher moves 310 elsewhere — 82.7%",
+      "RSS feeds do not refill: one pass over 63 production feeds yields ~1,800 unique headlines and a second pass fifteen minutes later yields 7, which killed the volume plan and forced breadth over patience",
+      "GDELT is unusable on this network — one request succeeds, then every subsequent request returns 429 regardless of spacing, verified at 20s and at 65s, contributing zero rows over 20 minutes",
+      "All four token constants in the cost model were wrong when re-tokenised over the real 500 held-out prompts, moving the published headline from 45.4x to 41.3x cheaper",
+      "Teacher latency p50 782 ms / p95 868 ms sequential and warm, against a 19.6 s cold first call — measured before the 22 GB of weights were deleted, because the 34 GB disk budget made that ordering mandatory",
+      "Teacher reproducibility evidenced three ways: 100/100 unanimous at temperature 0, 60/60 across a mid-run config change, and 500/500 on an independent re-prediction of the whole held-out set"
+    ],
+    "decisions": [
+      {
+        "what": "Three arms — regex, teacher, student — not two",
+        "why": "The regex is the actual incumbent in production. Benchmarking only against the teacher would have been choosing the flattering baseline, and if the student loses to a keyword regex anywhere that is the finding and it leads."
+      },
+      {
+        "what": "Open-weight teacher only (Qwen3.5-35B-A3B, Apache-2.0, run locally)",
+        "why": "Training on a closed frontier model's output and then publishing the resulting weights would breach its terms. An open teacher makes the headline deliverable clean, costs $0, and needs no owner gate."
+      },
+      {
+        "what": "Corpus rebuilt from public RSS with zero credentials and zero user data",
+        "why": "It reproduces the production distribution without touching the product's database or any user-generated content, so there is no privacy disclosure attached and nothing blocks waiting for a key."
+      },
+      {
+        "what": "Macro-F1 over all eight classes, not over classes present in the data",
+        "why": "scikit-learn's default silently forgives a class the model never learned — 0.7222 against this implementation's 0.2708 on the same fixture. A distilled small model dropping a tail class entirely is precisely the failure this project exists to surface, so it must count as a zero. Written from first principles in ~60 lines so the choice is visible in the repo."
+      },
+      {
+        "what": "The label schema and the scorer were frozen before a single label existed",
+        "why": "Choosing a metric after seeing its result is the easiest way to manufacture a favourable one. Both were written, tested and committed in the sprint before the teacher was pulled."
+      },
+      {
+        "what": "The teacher arm is never scored against its own labels",
+        "why": "Gold is the teacher, so 'teacher accuracy' would read 100% by construction. Reporting a constructed 100% next to a real student number would be the single most misleading thing this project could publish; the 84% hand audit is reported instead."
+      },
+      {
+        "what": "The student gets a lean 32-token prompt, reversing an earlier decision to hold the prompt constant",
+        "why": "The original reasoning was backwards: a distilled student is supposed to stop needing the instructions, and making it re-read 262 tokens of class definitions would have understated the distillation win in the one place the project measures it. Both arms still see identical information and the identical held-out 500, so quality is unaffected."
+      },
+      {
+        "what": "Unparseable teacher outputs are marked and reported, never coerced to `general`",
+        "why": "Silently coercing them would bias the teacher toward the majority class and corrupt the very ceiling everything downstream is measured against. The scorer raises if it ever sees one, so the rule is enforced by code rather than documented."
+      },
+      {
+        "what": "MLX for training, LoRA r=16 in bf16, no QLoRA",
+        "why": "Unsloth and bitsandbytes are CUDA-only and this is an M4 Pro; TRL/peft on MPS is slow and flaky. At 4B in bf16 the memory is available on 48 GB unified, so QLoRA buys nothing and Unsloth advises against it for Qwen3.5 due to quantization artifacts."
+      },
+      {
+        "what": "Ship the best-validation checkpoint, chosen on the validation split alone",
+        "why": "The final iteration was 8.0 macro-F1 points worse. Choosing a checkpoint on the held-out set would leak it, so src/select_checkpoint.py never opens that file and records the fact, the ranking, and the chosen iteration in runs/current/best/selection.json. The guard is that the module cannot read the test set, not that nobody remembered the rule."
+      },
+      {
+        "what": "Publish the final-checkpoint evaluation next to the shipped one",
+        "why": "Reporting only the checkpoint that was selected for being best invites the reader to wonder what the others looked like. results/summary_final_checkpoint.json answers it."
+      }
+    ]
+  },
+  "github": {
+    "description": "LoRA-distilling a live production news classifier from a 35B open teacher into a 4B student. Three arms — the incumbent regex, the teacher, the student — on 500 headlines held out before any label existed.",
+    "topics": [
+      "distillation",
+      "lora",
+      "fine-tuning",
+      "mlx",
+      "apple-silicon",
+      "qwen",
+      "text-classification",
+      "open-weights",
+      "reproducible-research",
+      "python"
+    ]
+  },
+  "ownerGated": [
+    "push the LoRA adapter and/or merged weights to Hugging Face",
+    "publish the teacher-labelled dataset",
+    "make the GitHub repo public",
+    "write METHODOLOGY.md and close S8",
+    "optional paid ablation: re-label on a hosted larger teacher for a teacher-strength curve"
+  ],
+  "masterplan": "masterplan.md"
+}

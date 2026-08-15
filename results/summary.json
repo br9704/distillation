@@ -1,0 +1,442 @@
+{
+  "student_evaluated": true,
+  "provenance": {
+    "evaluated_at": "2026-08-15T11:18:27+00:00",
+    "base_model": "mlx-community/Qwen3.5-4B-bf16",
+    "base_model_revision": "491fdc7c087ba7fb48adcb1253f8e76d011db783",
+    "adapter_path": "/Users/brunojaamaa/Desktop/distillation/runs/current/best",
+    "adapter_sha256": "ad4b4c7da0924dec3e07b2496bded1dd97ace064a76dab7a90af2a69829c4ad2",
+    "heldout_sha256": "2168c9d4d185587e354a8ee665f866dbc9b3834ec0f5493cb2ea38909af0d438",
+    "heldout_labels_sha256": "dd44fabe9c180d59976a19512f0be2a28fee094c19ac899a245b485a6febfc39",
+    "heldout_rows_scored": 500,
+    "git_commit": "39333c7e3b600c39627db2cf7608d6ab5ae9c2ca",
+    "git_dirty": true
+  },
+  "arms": [
+    {
+      "arm": "regex",
+      "n": 500,
+      "invalid_outputs": 0,
+      "scored_on": 500,
+      "scoring_note": "macro-F1 and accuracy are computed over the 500 parseable predictions; 0 unparseable output(s) are excluded from scoring and reported separately.",
+      "accuracy": 0.342,
+      "macro_f1": 0.3372,
+      "per_class": [
+        {
+          "label": "geopolitics",
+          "precision": 0.8261,
+          "recall": 0.1959,
+          "f1": 0.3167,
+          "support": 97
+        },
+        {
+          "label": "finance",
+          "precision": 0.8947,
+          "recall": 0.3333,
+          "f1": 0.4857,
+          "support": 51
+        },
+        {
+          "label": "tech",
+          "precision": 0.7619,
+          "recall": 0.5333,
+          "f1": 0.6275,
+          "support": 60
+        },
+        {
+          "label": "sports",
+          "precision": 0.9286,
+          "recall": 0.25,
+          "f1": 0.3939,
+          "support": 52
+        },
+        {
+          "label": "entertainment",
+          "precision": 1.0,
+          "recall": 0.129,
+          "f1": 0.2286,
+          "support": 62
+        },
+        {
+          "label": "science",
+          "precision": 0.8947,
+          "recall": 0.2179,
+          "f1": 0.3505,
+          "support": 78
+        },
+        {
+          "label": "consumer",
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 34
+        },
+        {
+          "label": "general",
+          "precision": 0.1733,
+          "recall": 0.9848,
+          "f1": 0.2948,
+          "support": 66
+        }
+      ],
+      "confusion": {
+        "geopolitics": {
+          "geopolitics": 19,
+          "finance": 0,
+          "tech": 0,
+          "sports": 0,
+          "entertainment": 0,
+          "science": 0,
+          "consumer": 0,
+          "general": 78
+        },
+        "finance": {
+          "geopolitics": 0,
+          "finance": 17,
+          "tech": 3,
+          "sports": 0,
+          "entertainment": 0,
+          "science": 0,
+          "consumer": 0,
+          "general": 31
+        },
+        "tech": {
+          "geopolitics": 3,
+          "finance": 1,
+          "tech": 32,
+          "sports": 0,
+          "entertainment": 0,
+          "science": 1,
+          "consumer": 0,
+          "general": 23
+        },
+        "sports": {
+          "geopolitics": 0,
+          "finance": 0,
+          "tech": 0,
+          "sports": 13,
+          "entertainment": 0,
+          "science": 0,
+          "consumer": 0,
+          "general": 39
+        },
+        "entertainment": {
+          "geopolitics": 0,
+          "finance": 0,
+          "tech": 2,
+          "sports": 1,
+          "entertainment": 8,
+          "science": 1,
+          "consumer": 0,
+          "general": 50
+        },
+        "science": {
+          "geopolitics": 0,
+          "finance": 0,
+          "tech": 2,
+          "sports": 0,
+          "entertainment": 0,
+          "science": 17,
+          "consumer": 0,
+          "general": 59
+        },
+        "consumer": {
+          "geopolitics": 0,
+          "finance": 1,
+          "tech": 3,
+          "sports": 0,
+          "entertainment": 0,
+          "science": 0,
+          "consumer": 0,
+          "general": 30
+        },
+        "general": {
+          "geopolitics": 1,
+          "finance": 0,
+          "tech": 0,
+          "sports": 0,
+          "entertainment": 0,
+          "science": 0,
+          "consumer": 0,
+          "general": 65
+        }
+      },
+      "latency_ms": {
+        "p50": 0.01,
+        "p95": 0.01,
+        "mean": 0.0
+      },
+      "top_confusions": [
+        {
+          "gold": "geopolitics",
+          "pred": "general",
+          "n": 78
+        },
+        {
+          "gold": "science",
+          "pred": "general",
+          "n": 59
+        },
+        {
+          "gold": "entertainment",
+          "pred": "general",
+          "n": 50
+        },
+        {
+          "gold": "sports",
+          "pred": "general",
+          "n": 39
+        },
+        {
+          "gold": "finance",
+          "pred": "general",
+          "n": 31
+        }
+      ]
+    },
+    {
+      "arm": "student",
+      "n": 500,
+      "invalid_outputs": 0,
+      "scored_on": 500,
+      "scoring_note": "macro-F1 and accuracy are computed over the 500 parseable predictions; 0 unparseable output(s) are excluded from scoring and reported separately.",
+      "accuracy": 0.854,
+      "macro_f1": 0.84,
+      "per_class": [
+        {
+          "label": "geopolitics",
+          "precision": 0.8654,
+          "recall": 0.9278,
+          "f1": 0.8955,
+          "support": 97
+        },
+        {
+          "label": "finance",
+          "precision": 0.88,
+          "recall": 0.8627,
+          "f1": 0.8713,
+          "support": 51
+        },
+        {
+          "label": "tech",
+          "precision": 0.8116,
+          "recall": 0.9333,
+          "f1": 0.8682,
+          "support": 60
+        },
+        {
+          "label": "sports",
+          "precision": 0.9608,
+          "recall": 0.9423,
+          "f1": 0.9515,
+          "support": 52
+        },
+        {
+          "label": "entertainment",
+          "precision": 0.8689,
+          "recall": 0.8548,
+          "f1": 0.8618,
+          "support": 62
+        },
+        {
+          "label": "science",
+          "precision": 0.8675,
+          "recall": 0.9231,
+          "f1": 0.8944,
+          "support": 78
+        },
+        {
+          "label": "consumer",
+          "precision": 0.9474,
+          "recall": 0.5294,
+          "f1": 0.6792,
+          "support": 34
+        },
+        {
+          "label": "general",
+          "precision": 0.7143,
+          "recall": 0.6818,
+          "f1": 0.6977,
+          "support": 66
+        }
+      ],
+      "confusion": {
+        "geopolitics": {
+          "geopolitics": 90,
+          "finance": 1,
+          "tech": 1,
+          "sports": 0,
+          "entertainment": 1,
+          "science": 0,
+          "consumer": 0,
+          "general": 4
+        },
+        "finance": {
+          "geopolitics": 2,
+          "finance": 44,
+          "tech": 3,
+          "sports": 0,
+          "entertainment": 0,
+          "science": 0,
+          "consumer": 0,
+          "general": 2
+        },
+        "tech": {
+          "geopolitics": 1,
+          "finance": 2,
+          "tech": 56,
+          "sports": 0,
+          "entertainment": 0,
+          "science": 1,
+          "consumer": 0,
+          "general": 0
+        },
+        "sports": {
+          "geopolitics": 1,
+          "finance": 0,
+          "tech": 1,
+          "sports": 49,
+          "entertainment": 0,
+          "science": 0,
+          "consumer": 0,
+          "general": 1
+        },
+        "entertainment": {
+          "geopolitics": 2,
+          "finance": 0,
+          "tech": 0,
+          "sports": 0,
+          "entertainment": 53,
+          "science": 2,
+          "consumer": 1,
+          "general": 4
+        },
+        "science": {
+          "geopolitics": 1,
+          "finance": 0,
+          "tech": 1,
+          "sports": 0,
+          "entertainment": 1,
+          "science": 72,
+          "consumer": 0,
+          "general": 3
+        },
+        "consumer": {
+          "geopolitics": 0,
+          "finance": 2,
+          "tech": 7,
+          "sports": 1,
+          "entertainment": 1,
+          "science": 1,
+          "consumer": 18,
+          "general": 4
+        },
+        "general": {
+          "geopolitics": 7,
+          "finance": 1,
+          "tech": 0,
+          "sports": 1,
+          "entertainment": 5,
+          "science": 7,
+          "consumer": 0,
+          "general": 45
+        }
+      },
+      "latency_ms": {
+        "p50": 322.06,
+        "p95": 402.96,
+        "mean": 339.17
+      },
+      "top_confusions": [
+        {
+          "gold": "consumer",
+          "pred": "tech",
+          "n": 7
+        },
+        {
+          "gold": "general",
+          "pred": "geopolitics",
+          "n": 7
+        },
+        {
+          "gold": "general",
+          "pred": "science",
+          "n": 7
+        },
+        {
+          "gold": "general",
+          "pred": "entertainment",
+          "n": 5
+        },
+        {
+          "gold": "geopolitics",
+          "pred": "general",
+          "n": 4
+        }
+      ]
+    },
+    {
+      "arm": "teacher",
+      "n": 500,
+      "note": "Quality is NOT scored against gold \u2014 gold IS this model's output, so any such figure would be 100% by construction. The teacher's estimated true accuracy is the 84% hand-audit agreement in results/audit_50.md.",
+      "hand_audit_agreement": 0.84,
+      "hand_audit_agreement_excluding_ambiguous": 0.93,
+      "latency_ms": {
+        "p50": 781.82,
+        "p95": 867.67,
+        "mean": 759.94
+      }
+    }
+  ],
+  "cost": {
+    "disclaimer": "LIST-PRICE ARITHMETIC, NOT MEASURED SPEND. Every arm in this project ran locally and cost $0. Token counts are measured with the real tokeniser; prices are published serverless rates (Fireworks, retrieved 2026-08-15).",
+    "rates_per_1m_tokens": {
+      "under_4B": 0.1,
+      "moe_up_to_56B": 0.5
+    },
+    "arms": {
+      "regex": {
+        "tokens_per_request": 0,
+        "cost_per_1k_requests": 0.0,
+        "note": "a pure function \u2014 no model, no tokens, no request"
+      },
+      "teacher": {
+        "rate_per_1m": 0.5,
+        "input_tokens": 302.98,
+        "output_tokens": 6.51,
+        "tokens_per_request": 309.49,
+        "cost_per_1k_requests": 0.154745,
+        "arithmetic": "(302.98 in + 6.51 out) x 1000 req = 309,490.0 tokens x $0.5/1M = $0.1547"
+      },
+      "student": {
+        "rate_per_1m": 0.1,
+        "input_tokens": 35.98,
+        "output_tokens": 1.51,
+        "tokens_per_request": 37.49,
+        "cost_per_1k_requests": 0.003749,
+        "arithmetic": "(35.98 in + 1.51 out) x 1000 req = 37,490.0 tokens x $0.1/1M = $0.0037"
+      }
+    },
+    "headline": {
+      "student_as_fraction_of_teacher": 0.0242,
+      "student_cheaper_by": 41.3,
+      "decomposition": {
+        "price_tier_factor": 5.0,
+        "token_count_factor": 8.26,
+        "note": "the two multiply; neither alone produces the headline"
+      }
+    },
+    "sensitivity": {
+      "if_student_kept_the_full_prompt": {
+        "cost_per_1k_requests": 0.030449,
+        "student_cheaper_by": 5.1,
+        "note": "what the S5 decision would have cost, before AMENDMENT A3 reversed it"
+      },
+      "if_student_billed_at_the_next_tier_up": {
+        "cost_per_1k_requests": 0.018745,
+        "student_cheaper_by": 8.3,
+        "note": "Qwen3.5-4B is 4.21B params, just over the sub-4B boundary \u2014 this is the pessimistic read"
+      }
+    }
+  }
+}

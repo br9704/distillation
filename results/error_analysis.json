@@ -1,0 +1,1364 @@
+{
+  "caveat": "Gold is the teacher's label, so every disagreement counted here is a disagreement with the teacher, not a proven mistake. The S4 hand audit put the teacher's own agreement with a human at 84% (results/audit_50.md), which is the ceiling on every number in this file.",
+  "arms": {
+    "regex": {
+      "n": 500,
+      "errors": 329,
+      "agreement": 0.342,
+      "top_confused_pairs": [
+        {
+          "gold": "geopolitics",
+          "pred": "general",
+          "n": 78
+        },
+        {
+          "gold": "science",
+          "pred": "general",
+          "n": 59
+        },
+        {
+          "gold": "entertainment",
+          "pred": "general",
+          "n": 50
+        },
+        {
+          "gold": "sports",
+          "pred": "general",
+          "n": 39
+        },
+        {
+          "gold": "finance",
+          "pred": "general",
+          "n": 31
+        }
+      ],
+      "taxonomy": {
+        "regex catch-all: no keyword matched, fell through to `general`": {
+          "n": 310,
+          "share_of_errors": 0.9422,
+          "examples": [
+            {
+              "headline": "Initiatives aim to help breastfeeding difficulties",
+              "outlet": "bbc.com",
+              "gold": "science",
+              "pred": "general"
+            },
+            {
+              "headline": "Two deadly flowers could inspire powerful new medicines",
+              "outlet": "sciencedaily.com",
+              "gold": "science",
+              "pred": "general"
+            },
+            {
+              "headline": "Stress can scramble your brain\u2019s internal GPS, MRI study finds",
+              "outlet": "sciencedaily.com",
+              "gold": "science",
+              "pred": "general"
+            },
+            {
+              "headline": "DNA reveals a society organised around women in pre-Roman Britain",
+              "outlet": "newscientist.com",
+              "gold": "science",
+              "pred": "general"
+            }
+          ]
+        },
+        "regex first-match-wins: an earlier branch claimed the headline": {
+          "n": 18,
+          "share_of_errors": 0.0547,
+          "examples": [
+            {
+              "headline": "Space news: The Perseid meteor shower, the Sun's surface, and a SpaceX moon crash",
+              "outlet": "npr.org",
+              "gold": "science",
+              "pred": "tech"
+            },
+            {
+              "headline": "Einstein the musician, AI prophets and more: Books in brief",
+              "outlet": "nature.com",
+              "gold": "entertainment",
+              "pred": "tech"
+            },
+            {
+              "headline": "Ted Lasso just had the biggest Apple TV premiere ever",
+              "outlet": "9to5mac.com",
+              "gold": "entertainment",
+              "pred": "tech"
+            },
+            {
+              "headline": "Apple official refurb store: Save hundreds on our top picks of the week",
+              "outlet": "9to5mac.com",
+              "gold": "consumer",
+              "pred": "tech"
+            }
+          ]
+        },
+        "regex matched a keyword the story is not about": {
+          "n": 1,
+          "share_of_errors": 0.003,
+          "examples": [
+            {
+              "headline": "Video shows moment man throws yogurt on two women in Iran",
+              "outlet": "cnn.com",
+              "gold": "general",
+              "pred": "geopolitics"
+            }
+          ]
+        }
+      },
+      "by_length": {
+        "long (70-89)": {
+          "n": 141,
+          "correct": 58,
+          "agreement": 0.4113
+        },
+        "medium (40-69)": {
+          "n": 245,
+          "correct": 79,
+          "agreement": 0.3224
+        },
+        "short (<40 ch)": {
+          "n": 33,
+          "correct": 2,
+          "agreement": 0.0606
+        },
+        "very long (90+)": {
+          "n": 81,
+          "correct": 32,
+          "agreement": 0.3951
+        }
+      },
+      "by_outlet_volume_band": {
+        "high volume (20+ held-out headlines)": {
+          "n": 238,
+          "correct": 68,
+          "agreement": 0.2857
+        },
+        "low volume (<8)": {
+          "n": 114,
+          "correct": 47,
+          "agreement": 0.4123
+        },
+        "medium volume (8-19)": {
+          "n": 148,
+          "correct": 56,
+          "agreement": 0.3784
+        }
+      },
+      "by_outlet": {
+        "theguardian.com": {
+          "n": 59,
+          "correct": 16,
+          "agreement": 0.2712
+        },
+        "bbc.com": {
+          "n": 47,
+          "correct": 8,
+          "agreement": 0.1702
+        },
+        "nytimes.com": {
+          "n": 39,
+          "correct": 14,
+          "agreement": 0.359
+        },
+        "foxnews.com": {
+          "n": 25,
+          "correct": 12,
+          "agreement": 0.48
+        },
+        "cnn.com": {
+          "n": 23,
+          "correct": 4,
+          "agreement": 0.1739
+        },
+        "sciencedaily.com": {
+          "n": 23,
+          "correct": 6,
+          "agreement": 0.2609
+        },
+        "cbsnews.com": {
+          "n": 22,
+          "correct": 8,
+          "agreement": 0.3636
+        },
+        "9to5mac.com": {
+          "n": 17,
+          "correct": 10,
+          "agreement": 0.5882
+        },
+        "latimes.com": {
+          "n": 17,
+          "correct": 8,
+          "agreement": 0.4706
+        },
+        "axios.com": {
+          "n": 15,
+          "correct": 5,
+          "agreement": 0.3333
+        },
+        "dw.com": {
+          "n": 15,
+          "correct": 6,
+          "agreement": 0.4
+        },
+        "espn.com": {
+          "n": 13,
+          "correct": 1,
+          "agreement": 0.0769
+        },
+        "npr.org": {
+          "n": 12,
+          "correct": 5,
+          "agreement": 0.4167
+        },
+        "thehill.com": {
+          "n": 12,
+          "correct": 1,
+          "agreement": 0.0833
+        },
+        "cnbc.com": {
+          "n": 11,
+          "correct": 3,
+          "agreement": 0.2727
+        },
+        "washingtonpost.com": {
+          "n": 11,
+          "correct": 4,
+          "agreement": 0.3636
+        },
+        "nbcnews.com": {
+          "n": 9,
+          "correct": 5,
+          "agreement": 0.5556
+        },
+        "economist.com": {
+          "n": 8,
+          "correct": 3,
+          "agreement": 0.375
+        },
+        "scmp.com": {
+          "n": 8,
+          "correct": 5,
+          "agreement": 0.625
+        },
+        "barrons.com": {
+          "n": 7,
+          "correct": 2,
+          "agreement": 0.2857
+        },
+        "marketwatch.com": {
+          "n": 7,
+          "correct": 2,
+          "agreement": 0.2857
+        },
+        "wired.com": {
+          "n": 7,
+          "correct": 2,
+          "agreement": 0.2857
+        },
+        "fool.com": {
+          "n": 6,
+          "correct": 5,
+          "agreement": 0.8333
+        },
+        "nature.com": {
+          "n": 6,
+          "correct": 2,
+          "agreement": 0.3333
+        },
+        "theatlantic.com": {
+          "n": 6,
+          "correct": 1,
+          "agreement": 0.1667
+        },
+        "cbssports.com": {
+          "n": 5,
+          "correct": 2,
+          "agreement": 0.4
+        },
+        "forbes.com": {
+          "n": 5,
+          "correct": 1,
+          "agreement": 0.2
+        },
+        "newyorker.com": {
+          "n": 5,
+          "correct": 1,
+          "agreement": 0.2
+        },
+        "techcrunch.com": {
+          "n": 5,
+          "correct": 2,
+          "agreement": 0.4
+        },
+        "variety.com": {
+          "n": 5,
+          "correct": 2,
+          "agreement": 0.4
+        },
+        "arstechnica.com": {
+          "n": 4,
+          "correct": 1,
+          "agreement": 0.25
+        },
+        "deadline.com": {
+          "n": 4,
+          "correct": 1,
+          "agreement": 0.25
+        },
+        "zdnet.com": {
+          "n": 4,
+          "correct": 2,
+          "agreement": 0.5
+        },
+        "aljazeera.com": {
+          "n": 3,
+          "correct": 2,
+          "agreement": 0.6667
+        },
+        "france24.com": {
+          "n": 3,
+          "correct": 1,
+          "agreement": 0.3333
+        },
+        "newsweek.com": {
+          "n": 3,
+          "correct": 2,
+          "agreement": 0.6667
+        },
+        "propublica.org": {
+          "n": 3,
+          "correct": 2,
+          "agreement": 0.6667
+        },
+        "smh.com.au": {
+          "n": 3,
+          "correct": 2,
+          "agreement": 0.6667
+        },
+        "abcnews.go.com": {
+          "n": 2,
+          "correct": 2,
+          "agreement": 1.0
+        },
+        "apnews.com": {
+          "n": 2,
+          "correct": 1,
+          "agreement": 0.5
+        },
+        "macrumors.com": {
+          "n": 2,
+          "correct": 1,
+          "agreement": 0.5
+        },
+        "newscientist.com": {
+          "n": 2,
+          "correct": 0,
+          "agreement": 0.0
+        },
+        "pitchfork.com": {
+          "n": 2,
+          "correct": 1,
+          "agreement": 0.5
+        },
+        "slate.com": {
+          "n": 2,
+          "correct": 2,
+          "agreement": 1.0
+        },
+        "theverge.com": {
+          "n": 2,
+          "correct": 1,
+          "agreement": 0.5
+        },
+        "vox.com": {
+          "n": 2,
+          "correct": 1,
+          "agreement": 0.5
+        },
+        "businessinsider.com": {
+          "n": 1,
+          "correct": 0,
+          "agreement": 0.0
+        },
+        "channelnewsasia.com": {
+          "n": 1,
+          "correct": 0,
+          "agreement": 0.0
+        },
+        "engadget.com": {
+          "n": 1,
+          "correct": 0,
+          "agreement": 0.0
+        },
+        "fortune.com": {
+          "n": 1,
+          "correct": 1,
+          "agreement": 1.0
+        },
+        "investing.com": {
+          "n": 1,
+          "correct": 1,
+          "agreement": 1.0
+        },
+        "venturebeat.com": {
+          "n": 1,
+          "correct": 1,
+          "agreement": 1.0
+        },
+        "wsj.com": {
+          "n": 1,
+          "correct": 0,
+          "agreement": 0.0
+        }
+      },
+      "outlet_tier_note": "No tier taxonomy exists in this repo \u2014 Feed is (outlet, url, section) and heldout.jsonl has no tier field. Volume bands are a stated proxy for prominence, not an editorial ranking."
+    },
+    "student": {
+      "n": 500,
+      "errors": 73,
+      "agreement": 0.854,
+      "top_confused_pairs": [
+        {
+          "gold": "general",
+          "pred": "science",
+          "n": 7
+        },
+        {
+          "gold": "consumer",
+          "pred": "tech",
+          "n": 7
+        },
+        {
+          "gold": "general",
+          "pred": "geopolitics",
+          "n": 7
+        },
+        {
+          "gold": "general",
+          "pred": "entertainment",
+          "n": 5
+        },
+        {
+          "gold": "consumer",
+          "pred": "general",
+          "n": 4
+        }
+      ],
+      "taxonomy": {
+        "disagreement involving the `general` catch-all": {
+          "n": 39,
+          "share_of_errors": 0.5342,
+          "examples": [
+            {
+              "headline": "NHS must plan for heatwaves like it does for winter, health secretary says",
+              "outlet": "bbc.com",
+              "gold": "science",
+              "pred": "general"
+            },
+            {
+              "headline": "Hundreds attend teenager's eclipse party",
+              "outlet": "bbc.com",
+              "gold": "general",
+              "pred": "science"
+            },
+            {
+              "headline": "National Trust expands park by 32 hectares",
+              "outlet": "bbc.com",
+              "gold": "science",
+              "pred": "general"
+            },
+            {
+              "headline": "Health service reviews cost almost \u00a3188,000",
+              "outlet": "bbc.com",
+              "gold": "consumer",
+              "pred": "general"
+            }
+          ]
+        },
+        "cross-domain confusion: consumer vs tech": {
+          "n": 7,
+          "share_of_errors": 0.0959,
+          "examples": [
+            {
+              "headline": "Apple official refurb store: Save hundreds on our top picks of the week",
+              "outlet": "9to5mac.com",
+              "gold": "consumer",
+              "pred": "tech"
+            },
+            {
+              "headline": "Ford on track to complete $2B factory overhaul for Fathom EV truck",
+              "outlet": "techcrunch.com",
+              "gold": "consumer",
+              "pred": "tech"
+            },
+            {
+              "headline": "The Yoto Music Box Is a Ray of Hope Amid the \u2018Techlash\u2019",
+              "outlet": "nytimes.com",
+              "gold": "consumer",
+              "pred": "tech"
+            },
+            {
+              "headline": "MacBook Air shortages are getting worse, here\u2019s where to buy one",
+              "outlet": "9to5mac.com",
+              "gold": "consumer",
+              "pred": "tech"
+            }
+          ]
+        },
+        "cross-domain confusion: finance vs tech": {
+          "n": 3,
+          "share_of_errors": 0.0411,
+          "examples": [
+            {
+              "headline": "Fox News AI Newsletter: One year until AI market busts, investor says",
+              "outlet": "foxnews.com",
+              "gold": "finance",
+              "pred": "tech"
+            },
+            {
+              "headline": "Chinese EVs pull into the lead",
+              "outlet": "cbsnews.com",
+              "gold": "finance",
+              "pred": "tech"
+            },
+            {
+              "headline": "AI is driving up consumer prices. That won't stop anytime soon.",
+              "outlet": "cbsnews.com",
+              "gold": "finance",
+              "pred": "tech"
+            }
+          ]
+        },
+        "cross-domain confusion: entertainment vs science": {
+          "n": 2,
+          "share_of_errors": 0.0274,
+          "examples": [
+            {
+              "headline": "Einstein the musician, AI prophets and more: Books in brief",
+              "outlet": "nature.com",
+              "gold": "entertainment",
+              "pred": "science"
+            },
+            {
+              "headline": "EJ Swift wins the 2026 Arthur C Clarke award for science fiction",
+              "outlet": "theguardian.com",
+              "gold": "entertainment",
+              "pred": "science"
+            }
+          ]
+        },
+        "cross-domain confusion: finance vs geopolitics": {
+          "n": 2,
+          "share_of_errors": 0.0274,
+          "examples": [
+            {
+              "headline": "White House revives unprecedented effort to remove Fed governor Lisa Cook",
+              "outlet": "axios.com",
+              "gold": "finance",
+              "pred": "geopolitics"
+            },
+            {
+              "headline": "Transit giant CRRC sets down marker in Hong Kong as sales pitch to overseas cities",
+              "outlet": "scmp.com",
+              "gold": "finance",
+              "pred": "geopolitics"
+            }
+          ]
+        },
+        "cross-domain confusion: tech vs finance": {
+          "n": 2,
+          "share_of_errors": 0.0274,
+          "examples": [
+            {
+              "headline": "Anthropic\u2019s $2 trillion problem: Its underlying business is nowhere near the IPO valuation it wants",
+              "outlet": "fortune.com",
+              "gold": "tech",
+              "pred": "finance"
+            },
+            {
+              "headline": "AI ecosystem's 'circular' investment: risk or advantage?",
+              "outlet": "dw.com",
+              "gold": "tech",
+              "pred": "finance"
+            }
+          ]
+        },
+        "cross-domain confusion: consumer vs finance": {
+          "n": 2,
+          "share_of_errors": 0.0274,
+          "examples": [
+            {
+              "headline": "'Funflation' hits home: Why staying in isn't the cost-saver it used to be",
+              "outlet": "cnbc.com",
+              "gold": "consumer",
+              "pred": "finance"
+            },
+            {
+              "headline": "Finding an apartment in Manhattan is getting even harder, as listings plummet and rents reach $5,000",
+              "outlet": "businessinsider.com",
+              "gold": "consumer",
+              "pred": "finance"
+            }
+          ]
+        },
+        "cross-domain confusion: entertainment vs geopolitics": {
+          "n": 2,
+          "share_of_errors": 0.0274,
+          "examples": [
+            {
+              "headline": "What Nolan\u2019s Odysseus tells us about Western elite\u2019s existential angst",
+              "outlet": "scmp.com",
+              "gold": "entertainment",
+              "pred": "geopolitics"
+            },
+            {
+              "headline": "Cover Story newsletter: The Mythos moment",
+              "outlet": "economist.com",
+              "gold": "entertainment",
+              "pred": "geopolitics"
+            }
+          ]
+        },
+        "cross-domain confusion: tech vs science": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "Artificial Intelligence used to design brand new viruses",
+              "outlet": "bbc.com",
+              "gold": "tech",
+              "pred": "science"
+            }
+          ]
+        },
+        "cross-domain confusion: sports vs tech": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "Apple in talks to acquire streaming rights for golf\u2019s Open Championship: report",
+              "outlet": "9to5mac.com",
+              "gold": "sports",
+              "pred": "tech"
+            }
+          ]
+        },
+        "cross-domain confusion: science vs tech": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "US boosts drone surveillance as flesh-eating screwworms spread in Texas",
+              "outlet": "arstechnica.com",
+              "gold": "science",
+              "pred": "tech"
+            }
+          ]
+        },
+        "cross-domain confusion: science vs entertainment": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "Where Wild Things Go",
+              "outlet": "newyorker.com",
+              "gold": "science",
+              "pred": "entertainment"
+            }
+          ]
+        },
+        "cross-domain confusion: tech vs geopolitics": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "Truth Social\u2019s sale of fast access to Trump posts draws legal concerns",
+              "outlet": "washingtonpost.com",
+              "gold": "tech",
+              "pred": "geopolitics"
+            }
+          ]
+        },
+        "cross-domain confusion: consumer vs entertainment": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "Bakery buys comedian's former sites after closure",
+              "outlet": "bbc.com",
+              "gold": "consumer",
+              "pred": "entertainment"
+            }
+          ]
+        },
+        "cross-domain confusion: geopolitics vs finance": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "Trade court upholds Trump's closure of 'de minimis' loophole",
+              "outlet": "cnbc.com",
+              "gold": "geopolitics",
+              "pred": "finance"
+            }
+          ]
+        },
+        "cross-domain confusion: consumer vs science": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "\u2018It\u2019s been a revelation\u2019: how heat pumps can cool your home in a heatwave",
+              "outlet": "theguardian.com",
+              "gold": "consumer",
+              "pred": "science"
+            }
+          ]
+        },
+        "cross-domain confusion: science vs geopolitics": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "The EU climate policy the world copied is under fire \u2014 what's at stake?",
+              "outlet": "dw.com",
+              "gold": "science",
+              "pred": "geopolitics"
+            }
+          ]
+        },
+        "cross-domain confusion: geopolitics vs tech": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "Humanoid robots: Trump's latest China trade battle?",
+              "outlet": "dw.com",
+              "gold": "geopolitics",
+              "pred": "tech"
+            }
+          ]
+        },
+        "cross-domain confusion: geopolitics vs entertainment": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "Stockard Channing: \u2018I cried at the election of Joe Biden, thinking we were out of the woods. Wrong!\u2019",
+              "outlet": "theguardian.com",
+              "gold": "geopolitics",
+              "pred": "entertainment"
+            }
+          ]
+        },
+        "cross-domain confusion: entertainment vs consumer": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "Meet David Advance Plus+, genius of toothpaste marketing: the Stephen Collins cartoon",
+              "outlet": "theguardian.com",
+              "gold": "entertainment",
+              "pred": "consumer"
+            }
+          ]
+        },
+        "cross-domain confusion: sports vs geopolitics": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "Trump lingers awkwardly long after presenting World Cup trophy to Spain. It could have been worse",
+              "outlet": "latimes.com",
+              "gold": "sports",
+              "pred": "geopolitics"
+            }
+          ]
+        },
+        "cross-domain confusion: consumer vs sports": {
+          "n": 1,
+          "share_of_errors": 0.0137,
+          "examples": [
+            {
+              "headline": "\u2018Community spaces are being taken away\u2019: campaigners rail at rise of pay-to-play padel courts",
+              "outlet": "theguardian.com",
+              "gold": "consumer",
+              "pred": "sports"
+            }
+          ]
+        }
+      },
+      "by_length": {
+        "long (70-89)": {
+          "n": 141,
+          "correct": 111,
+          "agreement": 0.7872
+        },
+        "medium (40-69)": {
+          "n": 245,
+          "correct": 216,
+          "agreement": 0.8816
+        },
+        "short (<40 ch)": {
+          "n": 33,
+          "correct": 26,
+          "agreement": 0.7879
+        },
+        "very long (90+)": {
+          "n": 81,
+          "correct": 74,
+          "agreement": 0.9136
+        }
+      },
+      "by_outlet_volume_band": {
+        "high volume (20+ held-out headlines)": {
+          "n": 238,
+          "correct": 204,
+          "agreement": 0.8571
+        },
+        "low volume (<8)": {
+          "n": 114,
+          "correct": 100,
+          "agreement": 0.8772
+        },
+        "medium volume (8-19)": {
+          "n": 148,
+          "correct": 123,
+          "agreement": 0.8311
+        }
+      },
+      "by_outlet": {
+        "theguardian.com": {
+          "n": 59,
+          "correct": 49,
+          "agreement": 0.8305
+        },
+        "bbc.com": {
+          "n": 47,
+          "correct": 39,
+          "agreement": 0.8298
+        },
+        "nytimes.com": {
+          "n": 39,
+          "correct": 34,
+          "agreement": 0.8718
+        },
+        "foxnews.com": {
+          "n": 25,
+          "correct": 24,
+          "agreement": 0.96
+        },
+        "cnn.com": {
+          "n": 23,
+          "correct": 18,
+          "agreement": 0.7826
+        },
+        "sciencedaily.com": {
+          "n": 23,
+          "correct": 23,
+          "agreement": 1.0
+        },
+        "cbsnews.com": {
+          "n": 22,
+          "correct": 17,
+          "agreement": 0.7727
+        },
+        "9to5mac.com": {
+          "n": 17,
+          "correct": 13,
+          "agreement": 0.7647
+        },
+        "latimes.com": {
+          "n": 17,
+          "correct": 16,
+          "agreement": 0.9412
+        },
+        "axios.com": {
+          "n": 15,
+          "correct": 12,
+          "agreement": 0.8
+        },
+        "dw.com": {
+          "n": 15,
+          "correct": 12,
+          "agreement": 0.8
+        },
+        "espn.com": {
+          "n": 13,
+          "correct": 13,
+          "agreement": 1.0
+        },
+        "npr.org": {
+          "n": 12,
+          "correct": 12,
+          "agreement": 1.0
+        },
+        "thehill.com": {
+          "n": 12,
+          "correct": 12,
+          "agreement": 1.0
+        },
+        "cnbc.com": {
+          "n": 11,
+          "correct": 9,
+          "agreement": 0.8182
+        },
+        "washingtonpost.com": {
+          "n": 11,
+          "correct": 6,
+          "agreement": 0.5455
+        },
+        "nbcnews.com": {
+          "n": 9,
+          "correct": 7,
+          "agreement": 0.7778
+        },
+        "economist.com": {
+          "n": 8,
+          "correct": 6,
+          "agreement": 0.75
+        },
+        "scmp.com": {
+          "n": 8,
+          "correct": 5,
+          "agreement": 0.625
+        },
+        "barrons.com": {
+          "n": 7,
+          "correct": 6,
+          "agreement": 0.8571
+        },
+        "marketwatch.com": {
+          "n": 7,
+          "correct": 7,
+          "agreement": 1.0
+        },
+        "wired.com": {
+          "n": 7,
+          "correct": 6,
+          "agreement": 0.8571
+        },
+        "fool.com": {
+          "n": 6,
+          "correct": 6,
+          "agreement": 1.0
+        },
+        "nature.com": {
+          "n": 6,
+          "correct": 5,
+          "agreement": 0.8333
+        },
+        "theatlantic.com": {
+          "n": 6,
+          "correct": 4,
+          "agreement": 0.6667
+        },
+        "cbssports.com": {
+          "n": 5,
+          "correct": 5,
+          "agreement": 1.0
+        },
+        "forbes.com": {
+          "n": 5,
+          "correct": 5,
+          "agreement": 1.0
+        },
+        "newyorker.com": {
+          "n": 5,
+          "correct": 4,
+          "agreement": 0.8
+        },
+        "techcrunch.com": {
+          "n": 5,
+          "correct": 4,
+          "agreement": 0.8
+        },
+        "variety.com": {
+          "n": 5,
+          "correct": 5,
+          "agreement": 1.0
+        },
+        "arstechnica.com": {
+          "n": 4,
+          "correct": 3,
+          "agreement": 0.75
+        },
+        "deadline.com": {
+          "n": 4,
+          "correct": 4,
+          "agreement": 1.0
+        },
+        "zdnet.com": {
+          "n": 4,
+          "correct": 3,
+          "agreement": 0.75
+        },
+        "aljazeera.com": {
+          "n": 3,
+          "correct": 3,
+          "agreement": 1.0
+        },
+        "france24.com": {
+          "n": 3,
+          "correct": 3,
+          "agreement": 1.0
+        },
+        "newsweek.com": {
+          "n": 3,
+          "correct": 3,
+          "agreement": 1.0
+        },
+        "propublica.org": {
+          "n": 3,
+          "correct": 3,
+          "agreement": 1.0
+        },
+        "smh.com.au": {
+          "n": 3,
+          "correct": 3,
+          "agreement": 1.0
+        },
+        "abcnews.go.com": {
+          "n": 2,
+          "correct": 1,
+          "agreement": 0.5
+        },
+        "apnews.com": {
+          "n": 2,
+          "correct": 1,
+          "agreement": 0.5
+        },
+        "macrumors.com": {
+          "n": 2,
+          "correct": 2,
+          "agreement": 1.0
+        },
+        "newscientist.com": {
+          "n": 2,
+          "correct": 2,
+          "agreement": 1.0
+        },
+        "pitchfork.com": {
+          "n": 2,
+          "correct": 2,
+          "agreement": 1.0
+        },
+        "slate.com": {
+          "n": 2,
+          "correct": 1,
+          "agreement": 0.5
+        },
+        "theverge.com": {
+          "n": 2,
+          "correct": 2,
+          "agreement": 1.0
+        },
+        "vox.com": {
+          "n": 2,
+          "correct": 2,
+          "agreement": 1.0
+        },
+        "businessinsider.com": {
+          "n": 1,
+          "correct": 0,
+          "agreement": 0.0
+        },
+        "channelnewsasia.com": {
+          "n": 1,
+          "correct": 1,
+          "agreement": 1.0
+        },
+        "engadget.com": {
+          "n": 1,
+          "correct": 1,
+          "agreement": 1.0
+        },
+        "fortune.com": {
+          "n": 1,
+          "correct": 0,
+          "agreement": 0.0
+        },
+        "investing.com": {
+          "n": 1,
+          "correct": 1,
+          "agreement": 1.0
+        },
+        "venturebeat.com": {
+          "n": 1,
+          "correct": 1,
+          "agreement": 1.0
+        },
+        "wsj.com": {
+          "n": 1,
+          "correct": 1,
+          "agreement": 1.0
+        }
+      },
+      "outlet_tier_note": "No tier taxonomy exists in this repo \u2014 Feed is (outlet, url, section) and heldout.jsonl has no tier field. Volume bands are a stated proxy for prominence, not an editorial ranking."
+    }
+  },
+  "head_to_head": {
+    "student_right_regex_wrong": {
+      "n": 285,
+      "examples": [
+        {
+          "headline": "Initiatives aim to help breastfeeding difficulties",
+          "outlet": "bbc.com",
+          "gold": "science",
+          "regex_said": "general"
+        },
+        {
+          "headline": "Two deadly flowers could inspire powerful new medicines",
+          "outlet": "sciencedaily.com",
+          "gold": "science",
+          "regex_said": "general"
+        },
+        {
+          "headline": "Stress can scramble your brain\u2019s internal GPS, MRI study finds",
+          "outlet": "sciencedaily.com",
+          "gold": "science",
+          "regex_said": "general"
+        },
+        {
+          "headline": "DNA reveals a society organised around women in pre-Roman Britain",
+          "outlet": "newscientist.com",
+          "gold": "science",
+          "regex_said": "general"
+        },
+        {
+          "headline": "1 in 5 people may carry this hidden genetic heart risk",
+          "outlet": "sciencedaily.com",
+          "gold": "science",
+          "regex_said": "general"
+        },
+        {
+          "headline": "Sun-like star caught after eating one of its own planets",
+          "outlet": "sciencedaily.com",
+          "gold": "science",
+          "regex_said": "general"
+        },
+        {
+          "headline": "Space news: The Perseid meteor shower, the Sun's surface, and a SpaceX moon crash",
+          "outlet": "npr.org",
+          "gold": "science",
+          "regex_said": "tech"
+        },
+        {
+          "headline": "Author Correction: Cretaceous bird from Brazil informs the evolution of the avian skull and brain",
+          "outlet": "nature.com",
+          "gold": "science",
+          "regex_said": "general"
+        },
+        {
+          "headline": "A shattered asteroid may have bombarded Earth 800 million years ago",
+          "outlet": "sciencedaily.com",
+          "gold": "science",
+          "regex_said": "general"
+        },
+        {
+          "headline": "Most detailed images taken of sun's surface revealed",
+          "outlet": "cbsnews.com",
+          "gold": "science",
+          "regex_said": "general"
+        },
+        {
+          "headline": "Killer heat: how a warming land is changing Australia forever",
+          "outlet": "theguardian.com",
+          "gold": "science",
+          "regex_said": "general"
+        },
+        {
+          "headline": "Higgs boson breakthrough was UK triumph, but British physics faces 'catastrophic' cuts",
+          "outlet": "bbc.com",
+          "gold": "science",
+          "regex_said": "general"
+        }
+      ]
+    },
+    "regex_right_student_wrong": {
+      "n": 29,
+      "examples": [
+        {
+          "headline": "Hundreds attend teenager's eclipse party",
+          "outlet": "bbc.com",
+          "gold": "general",
+          "student_said": "science"
+        },
+        {
+          "headline": "Capybaras Were the Newest Lobbyists in This Brazilian Legislature",
+          "outlet": "nytimes.com",
+          "gold": "general",
+          "student_said": "science"
+        },
+        {
+          "headline": "Apple in talks to acquire streaming rights for golf\u2019s Open Championship: report",
+          "outlet": "9to5mac.com",
+          "gold": "sports",
+          "student_said": "tech"
+        },
+        {
+          "headline": "Fox News AI Newsletter: One year until AI market busts, investor says",
+          "outlet": "foxnews.com",
+          "gold": "finance",
+          "student_said": "tech"
+        },
+        {
+          "headline": "Burnham tells cabinet to tackle living costs at first meeting",
+          "outlet": "bbc.com",
+          "gold": "general",
+          "student_said": "geopolitics"
+        },
+        {
+          "headline": "Graham Platner to speak at Maine rally in return to public eye",
+          "outlet": "washingtonpost.com",
+          "gold": "general",
+          "student_said": "geopolitics"
+        },
+        {
+          "headline": "Trump\u2019s New Plan to Get His Name Back on the Kennedy Center",
+          "outlet": "theatlantic.com",
+          "gold": "general",
+          "student_said": "geopolitics"
+        },
+        {
+          "headline": "I Have a Wife, Kids, and a Good Life. No One Knows My Deepest Fantasy.",
+          "outlet": "slate.com",
+          "gold": "general",
+          "student_said": "entertainment"
+        },
+        {
+          "headline": "America has more majority-minority rural counties than urban and suburban ones",
+          "outlet": "axios.com",
+          "gold": "general",
+          "student_said": "geopolitics"
+        },
+        {
+          "headline": "White House revives unprecedented effort to remove Fed governor Lisa Cook",
+          "outlet": "axios.com",
+          "gold": "finance",
+          "student_said": "geopolitics"
+        },
+        {
+          "headline": "Anthropic\u2019s $2 trillion problem: Its underlying business is nowhere near the IPO valuation it wants",
+          "outlet": "fortune.com",
+          "gold": "tech",
+          "student_said": "finance"
+        },
+        {
+          "headline": "Flock boss admits surveillance firm took too long to act over police abuse",
+          "outlet": "bbc.com",
+          "gold": "general",
+          "student_said": "geopolitics"
+        }
+      ]
+    },
+    "note": "Per CLAUDE.md, any class where the student loses to the regex leads the README. `regex_right_student_wrong` is computed first-class for that reason."
+  },
+  "per_class": {
+    "geopolitics": {
+      "n_gold": 97,
+      "student_agreement": 0.9278,
+      "regex_agreement": 0.1959,
+      "student_minus_regex": 0.7319,
+      "student_loses": false,
+      "student_precision": 0.8654,
+      "regex_precision": 0.8261,
+      "student_f1": 0.8955,
+      "regex_f1": 0.3167,
+      "student_minus_regex_f1": 0.5788,
+      "student_loses_on_f1": false
+    },
+    "finance": {
+      "n_gold": 51,
+      "student_agreement": 0.8627,
+      "regex_agreement": 0.3333,
+      "student_minus_regex": 0.5294,
+      "student_loses": false,
+      "student_precision": 0.88,
+      "regex_precision": 0.8947,
+      "student_f1": 0.8713,
+      "regex_f1": 0.4857,
+      "student_minus_regex_f1": 0.3856,
+      "student_loses_on_f1": false
+    },
+    "tech": {
+      "n_gold": 60,
+      "student_agreement": 0.9333,
+      "regex_agreement": 0.5333,
+      "student_minus_regex": 0.4,
+      "student_loses": false,
+      "student_precision": 0.8116,
+      "regex_precision": 0.7619,
+      "student_f1": 0.8682,
+      "regex_f1": 0.6275,
+      "student_minus_regex_f1": 0.2407,
+      "student_loses_on_f1": false
+    },
+    "sports": {
+      "n_gold": 52,
+      "student_agreement": 0.9423,
+      "regex_agreement": 0.25,
+      "student_minus_regex": 0.6923,
+      "student_loses": false,
+      "student_precision": 0.9608,
+      "regex_precision": 0.9286,
+      "student_f1": 0.9515,
+      "regex_f1": 0.3939,
+      "student_minus_regex_f1": 0.5576,
+      "student_loses_on_f1": false
+    },
+    "entertainment": {
+      "n_gold": 62,
+      "student_agreement": 0.8548,
+      "regex_agreement": 0.129,
+      "student_minus_regex": 0.7258,
+      "student_loses": false,
+      "student_precision": 0.8689,
+      "regex_precision": 1.0,
+      "student_f1": 0.8618,
+      "regex_f1": 0.2286,
+      "student_minus_regex_f1": 0.6332,
+      "student_loses_on_f1": false
+    },
+    "science": {
+      "n_gold": 78,
+      "student_agreement": 0.9231,
+      "regex_agreement": 0.2179,
+      "student_minus_regex": 0.7052,
+      "student_loses": false,
+      "student_precision": 0.8675,
+      "regex_precision": 0.8947,
+      "student_f1": 0.8944,
+      "regex_f1": 0.3505,
+      "student_minus_regex_f1": 0.5439,
+      "student_loses_on_f1": false
+    },
+    "consumer": {
+      "n_gold": 34,
+      "student_agreement": 0.5294,
+      "regex_agreement": 0.0,
+      "student_minus_regex": 0.5294,
+      "student_loses": false,
+      "student_precision": 0.9474,
+      "regex_precision": 0.0,
+      "student_f1": 0.6792,
+      "regex_f1": 0.0,
+      "student_minus_regex_f1": 0.6792,
+      "student_loses_on_f1": false
+    },
+    "general": {
+      "n_gold": 66,
+      "student_agreement": 0.6818,
+      "regex_agreement": 0.9848,
+      "student_minus_regex": -0.303,
+      "student_loses": true,
+      "student_precision": 0.7143,
+      "regex_precision": 0.1733,
+      "student_f1": 0.6977,
+      "regex_f1": 0.2948,
+      "student_minus_regex_f1": 0.4029,
+      "student_loses_on_f1": false
+    }
+  }
+}

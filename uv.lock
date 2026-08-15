@@ -105,10 +105,12 @@ dependencies = [
     { name = "mlx-lm" },
     { name = "numpy" },
     { name = "pydantic" },
+    { name = "pyyaml" },
 ]
 
 [package.dev-dependencies]
 dev = [
+    { name = "pillow" },
     { name = "pytest" },
 ]
 
@@ -120,10 +122,14 @@ requires-dist = [
     { name = "mlx-lm", specifier = ">=0.31.3" },
     { name = "numpy", specifier = ">=1.26" },
     { name = "pydantic", specifier = ">=2.9" },
+    { name = "pyyaml", specifier = ">=6.0" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=8.3" }]
+dev = [
+    { name = "pillow", specifier = ">=10.0" },
+    { name = "pytest", specifier = ">=8.3" },
+]
 
 [[package]]
 name = "filelock"
