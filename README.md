@@ -1,13 +1,13 @@
 # distillation
 
 **LoRA-distils a live production news classifier from a 35B open teacher into a 4B student, and
-scores three arms — the incumbent regex, the teacher, the student — on 500 headlines held out
+scores three arms (the incumbent regex, the teacher, the student) on 500 headlines held out
 before a single label existed.**
 
 ![Two panels on a near-black field. Left: the same 500 held-out headlines labelled twice, teacher
 versus incumbent regex, showing the regex sending 375 of 500 to `general` while the teacher spreads
 them across all eight classes. Right: the 375 the regex called `general`, broken down by what the
-teacher actually called them — geopolitics 78, general 65, science 59, entertainment 50, sports 39,
+teacher actually called them: geopolitics 78, general 65, science 59, entertainment 50, sports 39,
 finance 31, consumer 30, tech 23.](charts/label_distribution.png)
 
 ```bash
@@ -15,7 +15,7 @@ uv sync
 uv run python -m src.reproduce                  # regenerates every result and chart below
 ```
 
-> **A 4B student agrees with its 35B teacher on 85.4% of held-out headlines — macro-F1 0.840 — at
+> **A 4B student agrees with its 35B teacher on 85.4% of held-out headlines (macro-F1 0.840) at
 > 41.3× lower list cost and 2.4× lower latency.** The keyword regex it would replace scores
 > **0.337** on the same 500 and cannot emit the `consumer` class even once. The student beats it on
 > every one of the eight classes on F1, and [loses to it on one](#where-the-student-loses).
@@ -29,12 +29,89 @@ uv run python -m src.reproduce                  # regenerates every result and c
 
 ---
 
+## What this is, in plain terms
+
+**Yes, this is a project where I actually trained a model.** Not prompted one, not called an API.
+There is no frontier model anywhere in the result path, and the thing that does the work at the end
+is a set of weights that did not exist before this repo.
+
+Here is the situation it came out of.
+
+I ship an iOS news app called **Sentinel**. It pulls in news headlines all day and has to file each
+one into one of eight buckets: geopolitics, finance, tech, sports, entertainment, science, consumer,
+general. The thing doing that filing is a keyword regex I wrote early on, basically a list of
+`if` statements that stops at the first keyword it recognises.
+
+It works well enough to ship, and it is obviously wrong once you look at it. `"Amazon Prime Day"`
+gets filed as `tech`, because the word `amazon` matches before it ever considers `consumer`. Any
+headline with the word `china` in it is `geopolitics` forever. Out of the 500 headlines I measured,
+it dumps **375 of them into `general`**, the catch-all bucket, and it never once uses `consumer`.
+
+### So what did I do about it
+
+The obvious fix is to call GPT or Claude on every headline. That costs money forever, adds a network
+round trip to something that has to be fast, and means the app stops working if someone else's API
+is down. So I did the other thing.
+
+**I taught a small model to do the job, by having a big model teach it.** That technique is called
+distillation, and it goes like this:
+
+1. **Get the data.** I rebuilt the headline corpus from the same 63 public RSS feeds the app already
+   reads. 3,706 headlines. No database access, no user data, no API keys.
+2. **Get a big model to do the task.** I downloaded a 35 billion parameter open model (Qwen3.5-35B)
+   and ran it **on my own laptop**, no cloud, no cost, to file all 3,706 headlines into the eight
+   buckets. This is the "teacher".
+3. **Check the teacher is any good.** I took 50 of its answers and graded them by hand myself,
+   before training anything. It agreed with me 84% of the time. That number is the ceiling on
+   everything that follows, so I measured it first rather than assuming it.
+4. **Train a small model on the teacher's answers.** I took a 4 billion parameter model, roughly
+   one ninth the size, and fine-tuned it on those labels using LoRA (a technique that trains a small
+   set of extra weights instead of the whole model). 1,200 training steps, about an hour, on the
+   laptop.
+5. **Measure all three fairly.** The old regex, the big teacher, and the new small student, all
+   scored on the same 500 headlines that I had set aside **before I generated a single label**, so
+   nothing could leak into training.
+
+### Did it work
+
+The small model agrees with its teacher, a model roughly **8× its size**, on **85.4%** of
+headlines. It runs **2.4 times faster**, costs about **one fortieth** as much to serve, and beats
+the regex it would replace by roughly two and a half times on the headline quality metric.
+
+The interesting part is *why* it is so much cheaper. The teacher needs 299 tokens of instructions on
+every single call, explaining what the eight buckets mean. The student needs **36**, because after
+training, the task is in its weights instead of in its prompt. That is the whole point of
+distillation, and it is the bulk of the cost difference.
+
+### The parts that were judgment calls, not steps
+
+- **I kept the old regex's bugs when I ported it.** Every defect is pinned by a passing test, so if
+  someone "fixes" one later, the test fails loudly. Comparing my model only against the big teacher
+  and not against what is actually running in production would have been picking an easy opponent.
+- **I used an open-weight teacher on purpose.** If I had trained on GPT or Claude output, I could
+  not legally publish the resulting weights. An open teacher keeps the whole thing publishable.
+- **I split off the test set before labelling anything**, and made the code assert they never
+  overlap instead of trusting myself to remember.
+- **I refuse to score the teacher.** The teacher's answers *are* the answer key, so scoring it
+  against itself returns a meaningless 100%. That number appears nowhere in this repo.
+- **I caught my own cost claim being wrong.** I had published "45× cheaper" until I checked the
+  token counts against the actual tokeniser, and found two of them were wrong in the direction that
+  flattered me. The real number is [41.3×](#cost). The correction is in the git history.
+- **I shipped training step 800, not the final step 1,200.** The last 200 steps made the model
+  worse, and the validation curve caught it. That choice is [worth 8 macro-F1
+  points](#how-it-was-built).
+- **I deleted a chart rather than fake the data for it.** My own plan asked for a breakdown by
+  outlet "tier". No tier data exists in this project, so building it would have meant inventing a
+  prestige ranking for 54 news outlets. I shipped a labelled proxy and wrote down why.
+
+---
+
 ## Results
 
 Held-out set, n=500, split before any label was generated and never trained on. Gold is the
 teacher's own label. Every figure regenerates from [`results/summary.json`](results/summary.json)
-and [`results/corpus_stats.json`](results/corpus_stats.json); the full protocol — corpus, split,
-prompt, noise audit, and what it costs that gold is a model's opinion — is in
+and [`results/corpus_stats.json`](results/corpus_stats.json); the full protocol (corpus, split,
+prompt, noise audit, and what it costs that gold is a model's opinion) is in
 **[METHODOLOGY.md](./METHODOLOGY.md)**.
 
 | Arm | Macro-F1 | Accuracy | p50 | p95 | Cost / 1k requests |
@@ -55,10 +132,10 @@ against the teacher, so the teacher's accuracy is a ceiling on the student's, no
 
 **The trade-off, which is the actual deliverable:** the student keeps **85.4% agreement** with a
 model 8× its size while costing **2.4%** as much per request and answering in **41%** of the time.
-It was never tuned toward parity — chasing the last few points is an explicit non-goal — and no
+It was never tuned toward parity, chasing the last few points is an explicit non-goal, and no
 attempt was made to beat the teacher.
 
-Cost is **list-price arithmetic, not measured spend** — every arm ran locally on one Mac and cost
+Cost is **list-price arithmetic, not measured spend**: every arm ran locally on one Mac and cost
 $0, and the rates are published serverless tiers applied to token counts measured over all 500
 rendered prompts. Latency *is* genuinely measured: sequential, one request at a time, warm, with
 warm-up calls discarded, all three arms through one harness on one machine.
@@ -75,13 +152,13 @@ rather than getting buried. There is exactly one, and it is real but degenerate:
 | `general` F1 | **0.698** | 0.295 |
 
 **The regex catches 98.5% of true `general` headlines because it sends 75% of everything there.**
-Its precision on the class is 0.173 — five of every six headlines it files under `general` belong
+Its precision on the class is 0.173, five of every six headlines it files under `general` belong
 somewhere else. So the regex wins the recall column by refusing to make a decision, and the student
 wins precision and F1 by a wide margin. It is reported because the rule says report it, not because
 it is a defeat worth defending against.
 
 The genuinely weak spot is elsewhere: **`consumer` recall is 0.529**. The student catches barely
-half the consumer headlines, losing 7 of them to `tech` — *"Apple official refurb store: Save
+half the consumer headlines, losing 7 of them to `tech`: *"Apple official refurb store: Save
 hundreds on our top picks of the week"* reads as tech to a model that saw only ~190 consumer
 training examples, the smallest class in the pool. AMENDMENT A1 predicted exactly this when the
 corpus target was lowered, and said the cost would land on the tail classes. It did.
@@ -90,14 +167,14 @@ corpus target was lowered, and said the cost would land on the tail classes. It 
 
 ![Confusion matrix for the incumbent regex on the held-out 500, gold on the vertical axis and
 predicted on the horizontal. 171 of 500 land on the diagonal. The rightmost `general` column is lit
-across every row — 78, 31, 23, 39, 50, 59, 30, 65 — while the `consumer` column is entirely
+across every row, 78, 31, 23, 39, 50, 59, 30, 65, while the `consumer` column is entirely
 empty.](charts/confusion_regex.png)
 
 Two things are visible at a glance and neither is subtle: the **`general` column is lit in every
 single row**, and the **`consumer` column is completely empty**. 171 of 500 land on the diagonal.
 
 This is the finding the project was built on, and it predates any student: **of the 375 held-out
-headlines the regex files under `general`, the teacher moves 310 elsewhere — 82.7%.** The
+headlines the regex files under `general`, the teacher moves 310 elsewhere, 82.7%.** The
 incumbent's catch-all is wrong five times out of six, and the chart at the top of this page is that
 pile broken down by where those headlines actually belong. Across the whole labelled corpus the
 regex sends **74.2%** of headlines to `general`; the teacher sends 13.3%.
@@ -117,7 +194,7 @@ Per-class F1, both arms, from `results/summary.json`:
 
 **When the regex fires, it is usually right; it almost never fires.** Entertainment precision is a
 perfect 1.000 on the eight headlines it claims, and it misses the other 54. The mirror image is
-`general`: recall 0.985, precision 0.173 — it catches nearly every true `general` because it catches
+`general`: recall 0.985, precision 0.173, it catches nearly every true `general` because it catches
 nearly everything. The top five confusions are all the same confusion, `X → general`: geopolitics 78,
 science 59, entertainment 50, sports 39, finance 31.
 
@@ -138,7 +215,7 @@ places: the `consumer` row, where only 18 of 34 are correct and 7 go to `tech`, 
 row, where 45 of 66 are correct and the rest scatter into `geopolitics` 7, `science` 7 and
 `entertainment` 5.](charts/confusion_student.png)
 
-**53.4% of the student's 73 errors involve the `general` catch-all** in one direction or the other —
+**53.4% of the student's 73 errors involve the `general` catch-all** in one direction or the other,
 and the S4 hand audit predicted this before a student existed. The audit found the teacher itself
 routing US domestic politics to `general` sometimes and `geopolitics` other times, and identified
 the cause: **the eight-class taxonomy inherited from the product has no `politics` class.**
@@ -147,7 +224,7 @@ a Senate audit fits neither. The student inherited the wobble and is scored agai
 that 53.4% is the taxonomy's fault rather than the model's. The full taxonomy by cause, with worked
 examples, is in [`results/error_analysis.md`](results/error_analysis.md).
 
-The rest is genuine cross-domain ambiguity of the kind the teacher also exhibits — *"Anthropic's $2
+The rest is genuine cross-domain ambiguity of the kind the teacher also exhibits, *"Anthropic's $2
 trillion problem: Its underlying business is nowhere near the IPO valuation it wants"* (gold `tech`,
 student said `finance`), *"EJ Swift wins the 2026 Arthur C Clarke award for science fiction"* (gold
 `entertainment`, student said `science`). These are headlines that honestly carry two labels; at
@@ -160,7 +237,7 @@ length or prominence prior.
 ## What it does
 
 Sentinel is a live iOS news-intelligence product. Every headline it ingests is sorted into one of
-eight topic classes, and the thing doing the sorting is a keyword regex —
+eight topic classes, and the thing doing the sorting is a keyword regex,
 `classifyWireItem()` in the production backend. It is structurally broken in ways visible in its own
 source, not inferred: the `if` chain returns on first match, so `"Amazon Prime Day"` is `tech`
 rather than `consumer`, `"SpaceX launch"` is `tech` rather than `science`, and any headline
@@ -172,11 +249,11 @@ labels, and reports quality, cost and latency for all three arms on the same hel
 
 Three properties make it a measurement rather than a demo. **The incumbent is an arm**, ported
 faithfully with its six defects intact and each one pinned by a passing test, so a future "fix"
-fails loudly — benchmarking only against the teacher would have been choosing the flattering
+fails loudly, benchmarking only against the teacher would have been choosing the flattering
 baseline. **The teacher is open-weight** (Qwen3.5-35B-A3B, Apache-2.0, run locally through Ollama),
 which means the resulting student weights are publishable; training on a closed frontier model's
 output and then shipping the weights would breach its terms. And **the corpus carries zero
-credentials and zero user data** — it is rebuilt from public feeds rather than read out of the
+credentials and zero user data**: it is rebuilt from public feeds rather than read out of the
 product's database, so there is no privacy disclosure attached to it.
 
 The stated deliverable is the trade-off curve, not parity. If the student reaches most of the
@@ -185,7 +262,7 @@ is explicitly out of scope, and if the student loses to the regex on any class t
 write-up rather than getting buried.
 
 The one thing that shaped every sprint boundary was **34 GB of free disk**, not RAM. The naïve
-ordering needs 37 GB — 19 GB teacher plus 8 GB base plus 8 GB merged plus the environment — so the
+ordering needs 37 GB, 19 GB teacher plus 8 GB base plus 8 GB merged plus the environment, so the
 plan is sequenced to delete the teacher before the student base model is pulled, which in turn is
 why teacher latency had to be measured while the weights were still resident. It was: sequentially,
 one request at a time, over the same held-out 500, never inferred from batched labelling throughput.
@@ -194,13 +271,13 @@ one request at a time, over the same held-out 500, never inferred from batched l
 
 ```mermaid
 flowchart TD
-    subgraph src["src/ — one module per stage"]
+    subgraph src["src/, one module per stage"]
         direction TB
         FEEDS["feeds.py<br/>63 production feeds<br/>+ 83 same-outlet sections"]
         HARVEST["harvest.py · rss.py · store.py<br/>async fetch, dedup on normalised URL"]
         SPLIT["split.py<br/>held-out frozen on first run<br/>disjointness asserted, not assumed"]
         TEACHER["teacher.py<br/>Qwen3.5-35B-A3B Q4_K_M<br/>JSON-schema-constrained decoding"]
-        PREP["prepare_training.py<br/>student_messages() — the one<br/>shared prompt shape"]
+        PREP["prepare_training.py<br/>student_messages(), the one<br/>shared prompt shape"]
         TRAIN["configs/lora.yaml → mlx_lm.lora<br/>r=16, bf16, mask_prompt"]
         EVAL["evaluate.py<br/>ONE harness, three arms"]
         REGEX["regex_baseline.py<br/>faithful port, bugs intact"]
@@ -232,7 +309,7 @@ flowchart TD
 ```
 
 Two decisions do most of the work. **The label schema and the scoring function were frozen before a
-single label existed** — `src/schema.py` and `src/scoring.py` were written and tested in the sprint
+single label existed**: `src/schema.py` and `src/scoring.py` were written and tested in the sprint
 before the teacher was pulled, which is what stops a metric from being chosen after its result is
 visible. Macro-F1 averages over **all eight** classes rather than the classes present in the data;
 scikit-learn's default would have read 0.7222 on the S1 fixture against this implementation's
@@ -241,7 +318,7 @@ exists to surface. The scorer is ~60 lines written from first principles specifi
 is visible in the repo rather than inherited from a library default.
 
 **The student and the eval harness share one function.** `student_messages()` in
-`src/prepare_training.py` produces the prompt shape, and `src/evaluate.py` imports it — training and
+`src/prepare_training.py` produces the prompt shape, and `src/evaluate.py` imports it, training and
 evaluation cannot drift apart, because there is only one definition to drift.
 
 ## How it was built
@@ -254,11 +331,11 @@ in there are worth pulling out, because each changed the project rather than mer
 5,500 headlines from repeat passes over 63 feeds. One pass yields ~1,800 unique; a second pass
 fifteen minutes later yields **7**, because RSS feeds carry a rolling window that has not moved.
 Volume comes from breadth or from hours, not from more passes. GDELT was the planned backfill and
-turned out unusable on this network — one request succeeds, then every subsequent request returns
+turned out unusable on this network, one request succeeds, then every subsequent request returns
 HTTP 429 regardless of spacing, verified at 20s and at 65s, contributing zero rows over 20 minutes.
 `src/gdelt.py` is kept because the code is correct and the failure is a rate-limit penalty box
 rather than a bug. What worked instead was section feeds drawn **only from outlets already in the
-production catalog** — 86 candidates probed, 84 returned items, and the committed catalog carries
+production catalog**: 86 candidates probed, 84 returned items, and the committed catalog carries
 **83**, because one working candidate (`skysports.com`) was dropped solely for introducing an outlet
 the product does not read. That rule is enforced by an `assert` in `src/feeds.py` and by a test,
 not by discipline. It also fixed the tail-class problem at its source: the production catalog
@@ -267,15 +344,15 @@ live outlets**, and the target was formally lowered to 3,500 in an append-only a
 than quietly missed.
 
 **A probe designed to de-risk the model architecture caught an unrelated silent failure instead.**
-The S5 sprint existed to check whether `mlx-lm` could LoRA-tune `Qwen3.5-4B` at all — it is a
+The S5 sprint existed to check whether `mlx-lm` could LoRA-tune `Qwen3.5-4B` at all, it is a
 multimodal `Qwen3_5ForConditionalGeneration` with hybrid linear/full attention. It could. But the
-first adapter test returned `"Thinking Process:"` for all five cases — **0/5 valid classes** — which
+first adapter test returned `"Thinking Process:"` for all five cases, **0/5 valid classes**: which
 reads exactly like a failed fine-tune. It was not. Qwen3.5-4B is a reasoning model whose chat
 template opens a `<think>` block by default; mlx-lm renders *training* examples from the full
 conversation and so produces a **closed, empty** one. Passing `enable_thinking=False` at inference
 reproduces the training prefix byte-for-byte, and the same adapter scores **5/5 valid, 5/5 correct**.
-Without that finding the student would have scored near zero in evaluation and the obvious reading —
-"the fine-tune failed" — would have been completely wrong.
+Without that finding the student would have scored near zero in evaluation and the obvious reading,
+"the fine-tune failed", would have been completely wrong.
 
 **Two measurements reversed decisions that had already been made.** The teacher was to be labelled
 with a 32,768-token context; Ollama's default, on ~250-token prompts, drove a 48 GB machine into
@@ -287,7 +364,7 @@ constant kept the comparison clean. Tokenising both shapes showed **88% of every
 was the same 262-token instruction block repeated 3,046 times**, projecting the run to ~10 hours
 against a 1-hour cap. The deeper objection is that the original reasoning was backwards: a distilled
 student is supposed to stop needing the instructions. Both arms still see identical *information* and
-the identical held-out 500, so quality is unaffected — what changes is that the student stops paying
+the identical held-out 500, so quality is unaffected, what changes is that the student stops paying
 to re-read instructions it has already learned, which belongs in the cost table as a result rather
 than being suppressed as a confound.
 
@@ -313,7 +390,7 @@ was retrained from scratch with the log written inside the repo where a reboot c
 **The curve then paid for itself, and the finding is the most valuable thing in this sprint.** Loss
 flattens by iteration 100 and sits at ~0.07 through iteration 900, then blows out over the last 200
 iterations. Note *what* rises: validation loss goes 0.075 → 0.280, and mean **training** loss rises
-with it, 0.072 → 0.26. That is not overfitting — overfitting drives training loss down while
+with it, 0.072 → 0.26. That is not overfitting, overfitting drives training loss down while
 validation climbs. Both moving together is an **optimisation excursion**, and the plain reading is
 that 1,200 iterations was simply too many for this run.
 
@@ -322,22 +399,22 @@ That choice is worth **+8.0 macro-F1 points**:
 
 | adapter | macro-F1 | artifact |
 |---|---|---|
-| **iter 800** — best validation loss (0.075) | **0.8400** | [`results/summary.json`](results/summary.json) |
-| iter 1200 — final weights, the default | 0.7599 | [`results/summary_final_checkpoint.json`](results/summary_final_checkpoint.json) |
+| **iter 800**: best validation loss (0.075) | **0.8400** | [`results/summary.json`](results/summary.json) |
+| iter 1200, final weights, the default | 0.7599 | [`results/summary_final_checkpoint.json`](results/summary_final_checkpoint.json) |
 
 Shipping mlx-lm's default final checkpoint would have thrown away a tenth of the model's quality.
 Both evaluations are committed rather than only the flattering one.
 
 **The selection used only the 160-example validation split carved from the training pool.** The
-held-out 500 played no part in choosing the checkpoint — `src/select_checkpoint.py` never opens that
+held-out 500 played no part in choosing the checkpoint, `src/select_checkpoint.py` never opens that
 file and records so in `runs/current/best/selection.json`, alongside the full ranking of all six
 checkpoints. Picking a checkpoint on the test set is the quiet way to leak it, and the guard here is
 that the module cannot read it rather than that nobody remembered to.
 
 Four report windows returned `nan` and are drawn as marked gaps rather than dropped, because a
 silent hole in a loss curve should be impossible to miss. **Ten training batches recorded a loss of
-exactly 0.0** — real, on a task where a batch of eight short single-token answers can genuinely be
-predicted perfectly — and the plot is symlog rather than log so those points are visible at the
+exactly 0.0**: real, on a task where a batch of eight short single-token answers can genuinely be
+predicted perfectly, and the plot is symlog rather than log so those points are visible at the
 floor instead of being silently dropped by a log scale that cannot represent zero.
 
 ## Evidence
@@ -363,7 +440,7 @@ floor instead of being silently dropped by a log scale that cannot represent zer
 | Corpus, split protocol, prompt, noise audit, limitations | [`METHODOLOGY.md`](./METHODOLOGY.md) |
 | Every sprint's acceptance gate, delta and deferral | [`masterplan.md`](./masterplan.md) |
 
-`data/` is gitignored — it is large and fully regenerable from `src/harvest.py`. That is why
+`data/` is gitignored, it is large and fully regenerable from `src/harvest.py`. That is why
 `src/stats.py` exists: it recomputes every corpus and teacher figure from the JSONL and writes them
 into `results/corpus_stats.json`, so a reader checks a number against a file rather than against
 prose.
@@ -376,11 +453,11 @@ under 4B, **$0.50 / 1M tokens** for MoE up to 56B. Both are flat across input an
 is no input/output split to argue about.
 
 ```
-regex     $0.0000 / 1k requests   a pure function — no model, no tokens, no request
+regex     $0.0000 / 1k requests   a pure function, no model, no tokens, no request
 teacher   $0.1547 / 1k requests   (302.98 in +  6.51 out) × 1000 = 309,490 tokens × $0.50/1M
 student   $0.0037 / 1k requests   ( 35.98 in +  1.51 out) × 1000 =  37,490 tokens × $0.10/1M
 
-student is 2.42% of teacher cost — 41.3× cheaper
+student is 2.42% of teacher cost, 41.3× cheaper
   = 5.0× price tier  ×  8.26× fewer tokens        (neither factor alone produces it)
 ```
 
@@ -388,24 +465,24 @@ Those token counts are measured, not assumed, and the measurement corrected the 
 originally carried four hardcoded constants; re-tokenising every one of the 500 held-out prompts
 through each arm's real prompt builder
 ([`src/measure_tokens.py`](src/measure_tokens.py) → [`results/token_counts.json`](results/token_counts.json))
-found all four wrong in both directions — the student's input was understated at 32 against a
+found all four wrong in both directions, the student's input was understated at 32 against a
 measured **35.98**, and the teacher's output overstated at 10 against a measured **6.51**. The
 published ratio moved from 45.4× to **41.3×**. `cost.py` now reads the artifact and raises if it is
 missing, so it can no longer fall back to a constant.
 
 **One caveat travels with the teacher figures.** The teacher's 22 GB of weights were deleted in S4
-to reclaim disk, so its prompts are tokenised with the *student's* tokeniser — same Qwen family, but
+to reclaim disk, so its prompts are tokenised with the *student's* tokeniser, same Qwen family, but
 not the same file. That is recorded in `results/token_counts.json` rather than left implicit.
 
 41.3× is the optimistic read and the pessimistic one is reported beside it. Qwen3.5-4B is 4.21B
 parameters, just over the sub-4B tier boundary; billed one tier up the price-tier factor disappears
 and it is **8.3× cheaper**. Had the student kept the teacher's full prompt it would have been
-**5.1×** — that gap is what [AMENDMENT A3](masterplan.md#amendments) bought.
+**5.1×**: that gap is what [AMENDMENT A3](masterplan.md#amendments) bought.
 
 ## Usage
 
 ```bash
-uv sync                                          # Python 3.12 + MLX. Not 3.14 — no ML wheels yet.
+uv sync                                          # Python 3.12 + MLX. Not 3.14, no ML wheels yet.
 uv run pytest -q                                 # green, and run in CI on every push
 
 uv run python -m src.harvest                     # rebuild the corpus from public RSS
@@ -418,15 +495,15 @@ uv run python -m src.teacher --input data/train_pool.jsonl --output data/train_l
 uv run python -m src.teacher --latency --n 500             # sequential timing, before deletion
 uv run python -m src.prepare_training            # → data/mlx/{train,valid,test}.jsonl
 
-uv run mlx_lm.lora --config configs/lora.yaml    # LoRA r=16, bf16. Explicit — reproduce never trains.
+uv run mlx_lm.lora --config configs/lora.yaml    # LoRA r=16, bf16. Explicit, reproduce never trains.
 
 uv run python -m src.reproduce                   # every result and chart, in dependency order
 uv run python -m src.reproduce --dry-run         # print the pipeline without running it
 uv run python -m src.stats                       # corpus + teacher receipts
 ```
 
-`src.reproduce` runs seven steps in dependency order — token counts → run record → **checkpoint
-selection** → training curve → evaluation → error analysis → confusion matrices — and deliberately
+`src.reproduce` runs seven steps in dependency order, token counts → run record → **checkpoint
+selection** → training curve → evaluation → error analysis → confusion matrices, and deliberately
 never trains; training is launched explicitly. Selection is a pipeline step rather than a
 prerequisite, so a fresh clone reproduces the choice of checkpoint instead of inheriting it, and the
 evaluation is pointed at `runs/current/best` rather than mlx-lm's final weights. `--skip-student` is
@@ -440,20 +517,19 @@ The harness prints one table for all three arms. Reproduced from
 arm         macro-F1  accuracy    p50 ms    p95 ms  invalid
 regex         0.3372    0.3420       0.0       0.0        0
 student       0.8400    0.8540     322.1     403.0        0
-teacher          n/a       n/a     781.8     867.7        —
-
-[eval] teacher quality is n/a by construction — see results/summary.json
+teacher          n/a       n/a     781.8     867.7,
+[eval] teacher quality is n/a by construction, see results/summary.json
 ```
 
 **`invalid 0` on the student matters more than it looks.** Every one of its 500 outputs parsed to a
 valid class with no coercion and no retry. That is the payoff of the S5 `enable_thinking=False`
-finding — without it the same adapter emits reasoning prose and scores near zero.
+finding, without it the same adapter emits reasoning prose and scores near zero.
 
 ## Limitations
 
 **Gold labels come from a model, so student-vs-gold measures agreement with the teacher, not
 correctness.** The hand audit puts the teacher's strict agreement with a human adjudicator at 84%,
-and that is the ceiling — the student cannot be meaningfully more right than the labels it is
+and that is the ceiling. The student cannot be meaningfully more right than the labels it is
 trained on and scored against. Both the 84% and the 93%-excluding-ambiguous figure are reported;
 neither is rounded up.
 
@@ -469,25 +545,25 @@ actionable finding for the product: the category set is missing a ninth class.
 
 **The task forces one label onto headlines that carry two.** At temperature 0.7 the teacher
 disagrees with itself on 14 of 100 headlines, and every disagreement inspected was genuine
-multi-label ambiguity rather than noise — *"Micron: China probes US chip maker for cybersecurity
+multi-label ambiguity rather than noise, *"Micron: China probes US chip maker for cybersecurity
 risk"* is honestly both geopolitics and tech. This is a soft ceiling on every arm.
 
-**Two of fifty audited headlines carry no topical content at all** — newsletter titles like
+**Two of fifty audited headlines carry no topical content at all**: newsletter titles like
 *"HQ PM Newsletter 8/13/2026"*. The teacher can only fall back on the outlet, which is a legitimate
 strategy that the student will also learn, but it means a slice of both arms' apparent accuracy is
 outlet-prior rather than headline understanding.
 
 **Scope.** Headline-only, no article body. English-only, despite the corpus including DW, France24,
-NHK and SCMP. One narrow task, 8 classes, 500 held-out examples — the smallest held-out class has 34,
+NHK and SCMP. One narrow task, 8 classes, 500 held-out examples, the smallest held-out class has 34,
 which is thin. The training set is ~3,200 rather than the planned ~5,000; AMENDMENT A1 said openly
-that the cost of that would land on the tail classes, and it did — **`consumer`, the smallest class
+that the cost of that would land on the tail classes, and it did, **`consumer`, the smallest class
 at ~190 training examples, recalls only 0.529** against 0.86–0.94 for every well-populated class.
 Feeds move, so the corpus is a snapshot of August 2026 rather than a stable benchmark.
 
 **Cost is arithmetic, latency is measured.** Every arm ran locally at $0. The dollar figures are
 published list prices applied to measured token counts, and are labelled as such in the code, in
 `results/summary.json`, and here. Latency is genuinely measured by this repo's own monotonic timer
-around single sequential requests, warm, with warm-up calls discarded — a cold first call costs
+around single sequential requests, warm, with warm-up calls discarded, a cold first call costs
 19.6 s against ~800 ms warm, and including that in p95 would measure the cost of starting a server
 rather than of serving a request.
 
@@ -502,25 +578,25 @@ is an owner gate.
 
 Getting here took two training runs. The first died at roughly iteration 1,170 of 1,200 in a macOS
 GPU-driver kernel panic and took its log with it; the second completed and is the one reported. The
-evaluated adapter is the best-validation checkpoint (iteration 800), not the final weights —
+evaluated adapter is the best-validation checkpoint (iteration 800), not the final weights,
 worth +8.0 macro-F1 points, and chosen using only the validation split.
 
 Every number in this README comes from a committed artifact and one command regenerates all of
-them. `results/summary.json` carries a provenance block — base model, pinned revision SHA, adapter
-SHA-256, held-out file hashes, git commit and a dirty flag — so no result traces back to an unknown
+them. `results/summary.json` carries a provenance block, base model, pinned revision SHA, adapter
+SHA-256, held-out file hashes, git commit and a dirty flag, so no result traces back to an unknown
 snapshot.
 
-Nothing here is published. Every owner-gated action — pushing weights or the dataset to Hugging
-Face, making the repo public, any paid compute — is batched into
+Nothing here is published. Every owner-gated action, pushing weights or the dataset to Hugging
+Face, making the repo public, any paid compute, is batched into
 [S9](masterplan.md#s9--all-owner-gates--nothing-here-runs-without-bruno) and none of it has been
-requested or approved — `git-lfs` and `huggingface-cli` are still uninstalled, deliberately, because
+requested or approved, `git-lfs` and `huggingface-cli` are still uninstalled, deliberately, because
 installing them would be preparing for a gate that may be declined. S0–S8 ran without a single owner
 gate interrupting them, which is what the plan asked for.
 
 ## License · Author
 
-MIT — see [LICENSE](LICENSE). Third-party attributions are in [NOTICE.md](NOTICE.md). Model
+MIT, see [LICENSE](LICENSE). Third-party attributions are in [NOTICE.md](NOTICE.md). Model
 weights are not committed; the teacher and base models are Apache-2.0 and are pulled by
 revision. Geist is vendored under SIL OFL-1.1.
 
-Built by **Bruno Jaamaa** — [brunojaamaa.dev](https://brunojaamaa.dev) · [@br9704](https://github.com/br9704)
+Built by **Bruno Jaamaa**: [brunojaamaa.dev](https://brunojaamaa.dev) · [@br9704](https://github.com/br9704)
