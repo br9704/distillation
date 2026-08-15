@@ -670,3 +670,43 @@ with `aethereum status`.)
 > - Student right where the regex is wrong: **285**. Regex right where the student is wrong: **29**.
 > - Evidence: `results/{summary.json,summary_final_checkpoint.json,predictions.jsonl,
 >   error_analysis.json,error_analysis.md,token_counts.json,sanity_20.json}`. 139 tests green.
+
+---
+
+## S8 — Writeup (close)
+
+**2026-08-15 · `record_decision` — invented terminal output is a distinct honest-claims failure**
+> The rule as written forbids stating a number no committed artifact can back. It does not
+> obviously forbid **plausible-looking terminal output that was never captured**, which is a
+> different failure with the same shape. It occurred: a Usage block was drafted with
+> `[eval] student 100/500` progress lines labelled "captured verbatim" for a run that session
+> had never performed. It was caught and replaced before publication, by its own author.
+> **Rule adopted:** anything resembling a transcript is reproduced from a committed artifact
+> and labelled as reproduced, or it does not appear. `METHODOLOGY.md` contains no transcripts.
+> **Why it is recorded rather than quietly fixed:** the near-miss is the useful part. A number
+> that cannot be backed is easy to challenge; fabricated output looks like evidence.
+
+**2026-08-15 · `record_verification` — S8 gate**
+> - `README.md` passes the brief's five rules — PASS
+> - `METHODOLOGY.md` written: task · corpus · split protocol · teacher and prompt · the 84%
+>   noise ceiling · what gold-is-a-model costs · training · evaluation · error analysis ·
+>   limitations · artifact index — PASS
+> - Every number traceable to a committed artifact — PASS. 29 README numbers re-verified
+>   against artifacts with zero mismatches; every figure in `METHODOLOGY.md` re-checked against
+>   its artifact before close (`consumer` n=34 / F1 0.679 / recall 52.9%; `general` F1 0.698 vs
+>   0.295; regex `general` precision 17.3%; 63 feeds; the 0.7222-vs-0.2708 scoring convention).
+> - Limitations prominent, not appended — PASS. "Where the student loses" sits directly under
+>   the results table, ahead of any material about the incumbent.
+> - No amber in any chart — PASS, and now enforced by `tests/test_charts_guard.py` over both
+>   source and committed pixels. `charts.py` had claimed "a test asserts this" while no such
+>   test existed; the claim is now true.
+> - The student loses `general` on recall and it leads the README — PASS
+> - Evidence: `README.md`, `METHODOLOGY.md`, `PROJECT.json`, `charts/*.png`, `results/*`.
+>   139 tests green.
+
+**2026-08-15 · `share_intent` — S9 is Bruno's alone**
+> S0–S8 are closed. Everything remaining requires money, publication, or an irreversible
+> external action, and per D8 none of it runs without the owner: pushing weights or the dataset
+> to Hugging Face, making the repo public, and the optional paid teacher-strength ablation.
+> Nothing has been published. No remote exists. `git-lfs` and `huggingface-cli` are still
+> uninstalled, deliberately — S9 installs them if and only if a gate is approved.

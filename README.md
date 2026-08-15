@@ -39,7 +39,7 @@ and [`results/corpus_stats.json`](results/corpus_stats.json).
 |---|---|---|---|---|---|
 | **regex** (incumbent, in production today) | 0.3372 | 0.3420 | &lt;0.01 ms | 0.01 ms | $0.0000 |
 | **teacher** · Qwen3.5-35B-A3B Q4_K_M | not scorable <sup>1</sup> | 84% <sup>2</sup> | 782 ms | 868 ms | $0.1547 |
-| **student** · Qwen3.5-4B + LoRA r=16 | **0.8400** | **0.8540** <sup>3</sup> | **327 ms** | **402 ms** | **$0.0037** |
+| **student** · Qwen3.5-4B + LoRA r=16 | **0.8400** | **0.8540** <sup>3</sup> | **322 ms** | **403 ms** | **$0.0037** |
 
 <sup>1</sup> **Gold *is* the teacher**, so scoring the teacher against gold returns 100% by
 construction and means nothing. That figure is not reported anywhere in this repo.
@@ -52,7 +52,7 @@ not be read as the student beating the teacher.** 85.4% is agreement with the te
 against the teacher, so the teacher's accuracy is a ceiling on the student's, not a rival figure.
 
 **The trade-off, which is the actual deliverable:** the student keeps **85.4% agreement** with a
-model 8× its size while costing **2.4%** as much per request and answering in **42%** of the time.
+model 8× its size while costing **2.4%** as much per request and answering in **41%** of the time.
 It was never tuned toward parity — chasing the last few points is an explicit non-goal — and no
 attempt was made to beat the teacher.
 
@@ -296,10 +296,12 @@ gold exactly.
 
 **The training run had to be done twice, and the curve shows why the second one mattered.**
 
-![Training and validation loss over 1,200 LoRA iterations on a near-black field. Loss falls from 5.6
-to about 0.1 within the first 100 iterations, stays flat through iteration 950, then drifts upward
-to roughly 0.3 over the last 200 iterations, with validation rising alongside it. Four vertical
-yellow markers flag report windows that returned nan.](charts/training_curve.png)
+![Training and validation loss over 1,200 LoRA iterations on a near-black field, drawn on a symlog
+scale. Loss falls from 5.6 to about 0.08 within the first 100 iterations and plateaus there through
+iteration 900, then rises sharply from about iteration 950, with training and validation climbing
+together to roughly 0.28. Ten training batches drop to a loss of exactly zero and appear as spikes
+to the floor. Four yellow markers flag report windows that returned
+nan.](charts/training_curve.png)
 
 The first full run died at roughly iteration 1,170 of 1,200 in a macOS GPU-driver kernel panic and
 took its stdout log with it, leaving the loss history unrecoverable. Resuming from a checkpoint
@@ -331,7 +333,10 @@ checkpoints. Picking a checkpoint on the test set is the quiet way to leak it, a
 that the module cannot read it rather than that nobody remembered to.
 
 Four report windows returned `nan` and are drawn as marked gaps rather than dropped, because a
-silent hole in a loss curve should be impossible to miss.
+silent hole in a loss curve should be impossible to miss. **Ten training batches recorded a loss of
+exactly 0.0** — real, on a task where a batch of eight short single-token answers can genuinely be
+predicted perfectly — and the plot is symlog rather than log so those points are visible at the
+floor instead of being silently dropped by a log scale that cannot represent zero.
 
 ## Evidence
 
@@ -417,9 +422,12 @@ uv run python -m src.reproduce --dry-run         # print the pipeline without ru
 uv run python -m src.stats                       # corpus + teacher receipts
 ```
 
-`src.reproduce` runs token counts → run record → training curve → evaluation → error analysis →
-confusion matrices, and deliberately never trains — training is launched explicitly. `--skip-student`
-is the variant that loads no model, for regenerating the regex and teacher rows on a machine without
+`src.reproduce` runs seven steps in dependency order — token counts → run record → **checkpoint
+selection** → training curve → evaluation → error analysis → confusion matrices — and deliberately
+never trains; training is launched explicitly. Selection is a pipeline step rather than a
+prerequisite, so a fresh clone reproduces the choice of checkpoint instead of inheriting it, and the
+evaluation is pointed at `runs/current/best` rather than mlx-lm's final weights. `--skip-student` is
+the variant that loads no model, for regenerating the regex and teacher rows on a machine without
 the weights.
 
 The harness prints one table for all three arms. Reproduced from
@@ -428,7 +436,7 @@ The harness prints one table for all three arms. Reproduced from
 ```
 arm         macro-F1  accuracy    p50 ms    p95 ms  invalid
 regex         0.3372    0.3420       0.0       0.0        0
-student       0.8400    0.8540     327.1     402.5        0
+student       0.8400    0.8540     322.1     403.0        0
 teacher          n/a       n/a     781.8     867.7        —
 
 [eval] teacher quality is n/a by construction — see results/summary.json

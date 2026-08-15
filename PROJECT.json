@@ -39,7 +39,7 @@
     },
     {
       "value": "2.4x",
-      "label": "lower latency than the teacher, sequential and warm (327 ms vs 782 ms p50)",
+      "label": "lower latency than the teacher, sequential and warm (322 ms vs 782 ms p50)",
       "source": "results/summary.json"
     },
     {

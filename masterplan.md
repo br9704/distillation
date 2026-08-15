@@ -1,6 +1,6 @@
 # masterplan.md — distillation
 
-> **Current sprint: S8 — Writeup** _(S0–S7 closed · Sprint D closed)_
+> **Current sprint: S9 — OWNER GATES (Bruno only)** _(S0–S8 closed · Sprint D closed)_
 >
 > Work only the active sprint. Mark tasks live: `[ ]` not started · `[~]` in progress ·
 > `[x]` complete · `[⏭]` deferred (one-line reason). **Never delete or rewrite content in
@@ -732,27 +732,72 @@ error taxonomy written in prose · every README number traceable to `results/sum
 
 # S8 — Writeup
 
-- [ ] `README.md` per the brief's five rules: one sentence · **results table above the fold** ·
+- [x] `README.md` per the brief's five rules: one sentence · **results table above the fold** ·
       one-line run command · architecture · **prominent limitations**
-- [ ] Charts in the inherited Aethereum design system (`hive/apps/web/styles/tokens.css`):
+      → Run command is `uv run python -m src.reproduce`. "Where the student loses" sits
+      immediately under the results table, ahead of anything about the incumbent.
+- [x] Charts in the inherited Aethereum design system (`hive/apps/web/styles/tokens.css`):
       Geist / Geist Mono, `#34C759` accent, near-black field, 0.5px hairlines.
       **Amber `#FF9500` is reserved for collision alerts and must not appear.**
       Bruno designs nothing — this is inherited, not invented.
-- [ ] `METHODOLOGY.md` — corpus construction, split protocol, prompt, teacher noise audit,
+      → Five charts. The amber rule is now **enforced by a test** (`tests/test_charts_guard.py`)
+      rather than asserted in a docstring: a source scan plus a pixel scan of every committed
+      PNG. `charts.py` had claimed "a test asserts this" while no such test existed.
+- [x] `METHODOLOGY.md` — corpus construction, split protocol, prompt, teacher noise audit,
       why gold is teacher-labelled and what that costs us
-- [ ] **Limitations, prominent and honest:**
+      → Ten sections plus an artifact index. Every figure reproduced from a committed artifact
+      and re-verified against it before the file was closed, not quoted from memory.
+- [x] **Limitations, prominent and honest:**
       teacher-label noise ceiling (with the measured number) · single task · 500-example
       held-out set · headline-only, no article body · English-only · distribution shift
       (feeds move) · gold labels come from the teacher, so student-vs-teacher agreement is
       not the same as correctness · list-price cost arithmetic, not measured spend
-- [ ] Honest-claims rule: **no number in the README that a committed artifact cannot back**
-- [ ] If the student loses to the regex on any class, that leads — it does not get buried
+      → All nine carried, plus three the plan did not list: **single training run, so no seed
+      variance** and no confidence intervals (a single run cannot support them honestly);
+      the 41.3× cost figure assumes the sub-4B tier and is **8.3× one tier up**; and
+      `consumer` recall 52.9% named as the student's real weakness.
+- [x] Honest-claims rule: **no number in the README that a committed artifact cannot back**
+      → Enforced in both directions this sprint. The cost headline was corrected 45.4× → 41.3×
+      when its token counts were checked against the tokeniser they claimed to come from, and
+      the outlet-tier breakdown was dropped rather than invented (S7 Deferred).
+- [x] If the student loses to the regex on any class, that leads — it does not get buried
+      → It does lose one. `general` recall 68.2% vs 98.5%, and it leads.
 
 **Acceptance:** README passes all five rules · every number traceable · limitations section
 is above the fold-adjacent, not appended at the bottom · no amber in any chart.
+— **PASSED**
+- Five README rules — PASS
+- Every number traceable to a committed artifact — PASS (29 re-verified, zero mismatches)
+- Limitations prominent, not appended — PASS ("Where the student loses" is directly under the
+  results table)
+- No amber in any chart — PASS, and now **test-enforced** across source and pixels
 
-**As-shipped delta:** _(fill at close)_
-**Deferred:** _(fill at close)_
+**As-shipped delta:**
+- **Two sessions worked this repo concurrently** and the split held: docs (`README.md`,
+  `PROJECT.json`, `LICENSE`, CI, `src/stats.py`) in one, S6/S7 engineering and
+  `METHODOLOGY.md` in the other, coordinated by direct message with file-level sequencing on
+  `masterplan.md`, `SYNC.md` and `CLAUDE.md`. Worth recording because the collision risk was
+  real: a concurrent model load during training would very likely have re-triggered the GPU
+  panic, and the eval harness was edited by both sessions in the same hour.
+- **The two most valuable catches of the sprint were each other's.** The docs session found
+  three bugs in the amber guard that made it pass vacuously; the engineering session found
+  that `src/reproduce.py` — by then the README's headline run command — evaluated the *final*
+  checkpoint, so anyone regenerating results would have silently overwritten the published
+  0.8400 with 0.7599 and had no way to tell.
+- **A fabricated terminal transcript was caught before publication, by its own author.** The
+  docs session drafted a Usage block with plausible `[eval] student 100/500` progress lines
+  labelled "captured verbatim" for a run it had never performed, then self-reported and
+  replaced it with output reproduced from `results/summary.json`. **The honest-claims rule as
+  written covers unbacked numbers; it does not obviously cover invented terminal output.** It
+  should. Adopted rule: anything resembling a transcript is reproduced from a committed
+  artifact and labelled, or it does not appear.
+- Latency drifted 327.09 → 322.06 ms p50 between two clean runs and had already propagated to
+  four published places. Re-synced. Quality metrics were byte-identical across both runs,
+  which is the reassuring part — only the wall-clock moved.
+
+**Deferred:**
+- `[⏭]` Seed-variance runs. One training run only, so no error bars anywhere. Stated as a
+  limitation rather than papered over; a second seed is the single highest-value follow-up.
 
 ---
 

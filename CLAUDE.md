@@ -222,14 +222,15 @@ Per Bruno's instruction, no gate interrupts S0–S8. Everything below waits for 
 
 > Update this line at the end of every sprint.
 
-**Current state:** **S0–S7 closed · Sprint D (documentation) closed.** All three arms measured on
-the held-out 500. **Student macro-F1 0.8400 · accuracy 0.8540 · p50 327 ms · p95 402 ms · 0
+**Current state:** **S0–S8 closed · Sprint D closed · only S9 (owner gates) remains.** All three arms measured on
+the held-out 500. **Student macro-F1 0.8400 · accuracy 0.8540 · p50 322 ms · p95 403 ms · 0
 unparseable**, against the incumbent regex's 0.3372 / 0.3420 and the teacher's 782/868 ms. The
 student is **41.3× cheaper** than the teacher at list price and **2.4× faster**. 139 tests green.
 
-**The README is complete and every number in it is backed by a committed artifact.** `PROJECT.json`
-is at the root with `status: shipped`. S8 (`METHODOLOGY.md`, full write-up) and S9 (owner gates)
-remain — nothing is published, no remote exists.
+**The README and `METHODOLOGY.md` are complete and every number in both is backed by a committed
+artifact.** `PROJECT.json` is at the root with `status: shipped`. **Only S9 (owner gates) remains,
+and it is Bruno's alone** — nothing is published, no remote exists, `git-lfs` and
+`huggingface-cli` are still deliberately uninstalled.
 
 **Two results that matter more than the headline:**
 - **The student loses one class to the regex** — `general` recall 0.682 vs 0.985 — and per this
