@@ -29,6 +29,8 @@ uv sync
 uv run python -m src.reproduce                  # regenerates every result and chart below
 ```
 
+Case study: [brunojaamaa.dev/projects/distillation](https://brunojaamaa.dev/projects/distillation)
+
 > **Macro-F1: student 0.840, incumbent regex 0.337.** On the same 500 headlines, the regex cannot
 > emit the `consumer` class even once. The student beats it on every one of the eight classes on
 > F1, and [loses to it on one](#where-the-student-loses) on recall, which leads rather than gets
