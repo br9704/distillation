@@ -33,7 +33,9 @@ uv run python -m src.reproduce                  # regenerates every result and c
 
 Held-out set, n=500, split before any label was generated and never trained on. Gold is the
 teacher's own label. Every figure regenerates from [`results/summary.json`](results/summary.json)
-and [`results/corpus_stats.json`](results/corpus_stats.json).
+and [`results/corpus_stats.json`](results/corpus_stats.json); the full protocol — corpus, split,
+prompt, noise audit, and what it costs that gold is a model's opinion — is in
+**[METHODOLOGY.md](./METHODOLOGY.md)**.
 
 | Arm | Macro-F1 | Accuracy | p50 | p95 | Cost / 1k requests |
 |---|---|---|---|---|---|
@@ -358,6 +360,7 @@ floor instead of being silently dropped by a log scale that cannot represent zer
 | The final-checkpoint evaluation, committed alongside the shipped one | [`results/summary_final_checkpoint.json`](results/summary_final_checkpoint.json) |
 | 20/20 sanity predictions against the merged weights | [`results/sanity_20.json`](results/sanity_20.json) |
 | Training hyperparameters, dataset hashes, pinned revision, git commit | [`runs/current/hyperparams.json`](runs/current/hyperparams.json) |
+| Corpus, split protocol, prompt, noise audit, limitations | [`METHODOLOGY.md`](./METHODOLOGY.md) |
 | Every sprint's acceptance gate, delta and deferral | [`masterplan.md`](./masterplan.md) |
 
 `data/` is gitignored — it is large and fully regenerable from `src/harvest.py`. That is why
@@ -494,8 +497,8 @@ draw. Treat the third decimal place as noise.
 
 ## Status
 
-**S0–S7 closed. All three arms are measured.** S8 (the full write-up and `METHODOLOGY.md`) and S9
-(the owner gates) remain.
+**S0–S8 closed. All three arms are measured and written up.** Only S9 remains, and every task in it
+is an owner gate.
 
 Getting here took two training runs. The first died at roughly iteration 1,170 of 1,200 in a macOS
 GPU-driver kernel panic and took its log with it; the second completed and is the one reported. The
@@ -510,9 +513,9 @@ snapshot.
 Nothing here is published. Every owner-gated action — pushing weights or the dataset to Hugging
 Face, making the repo public, any paid compute — is batched into
 [S9](masterplan.md#s9--all-owner-gates--nothing-here-runs-without-bruno) and none of it has been
-requested or approved. `METHODOLOGY.md` is an S8 deliverable and is deliberately not written yet;
-until it lands, [masterplan.md](./masterplan.md) and [SYNC.md](./SYNC.md) carry the protocol and the
-receipts.
+requested or approved — `git-lfs` and `huggingface-cli` are still uninstalled, deliberately, because
+installing them would be preparing for a gate that may be declined. S0–S8 ran without a single owner
+gate interrupting them, which is what the plan asked for.
 
 ## License · Author
 

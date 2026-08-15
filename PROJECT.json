@@ -167,7 +167,6 @@
     "push the LoRA adapter and/or merged weights to Hugging Face",
     "publish the teacher-labelled dataset",
     "make the GitHub repo public",
-    "write METHODOLOGY.md and close S8",
     "optional paid ablation: re-label on a hosted larger teacher for a teacher-strength curve"
   ],
   "masterplan": "masterplan.md"
