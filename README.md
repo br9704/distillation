@@ -1,8 +1,22 @@
 # distillation
 
-**LoRA-distils a live production news classifier from a 35B open teacher into a 4B student, and
-scores three arms (the incumbent regex, the teacher, the student) on 500 headlines held out
-before a single label existed.**
+**I trained a small language model to replace a keyword regex that was doing a bad job in
+production.**
+
+My iOS news app, Sentinel, files every incoming headline into one of eight buckets. The thing doing
+the filing was a regex I wrote early on: a list of `if` statements that stops at the first keyword
+it recognises. It dumps **375 of every 500 headlines** into the catch-all bucket and never once
+uses `consumer`.
+
+So I did the thing that actually fixes it. I downloaded a 35B open model, ran it **on my own
+laptop** to label 3,706 headlines, fine-tuned a 4B model on those labels, and then scored all three
+(old regex, big teacher, new student) on 500 headlines I had set aside **before generating a single
+label**.
+
+**The 4B student agrees with its 8× larger teacher on 85.4% of headlines, runs 2.4× faster, and
+costs about a fortieth as much to serve. No API calls, no cloud, no frontier model anywhere in the
+result path.** The technical version: LoRA-distils a live production classifier from a 35B open
+teacher into a 4B student, scoring three arms on a held-out set that existed before any label did.
 
 ![Two panels on a near-black field. Left: the same 500 held-out headlines labelled twice, teacher
 versus incumbent regex, showing the regex sending 375 of 500 to `general` while the teacher spreads
@@ -15,11 +29,10 @@ uv sync
 uv run python -m src.reproduce                  # regenerates every result and chart below
 ```
 
-> **A 4B student agrees with its 35B teacher on 85.4% of held-out headlines (macro-F1 0.840) at
-> 41.3× lower list cost and 2.4× lower latency.** The keyword regex it would replace scores
-> **0.337** on the same 500 and cannot emit the `consumer` class even once. The student beats it on
-> every one of the eight classes on F1, and [loses to it on one](#where-the-student-loses).
-> [Full table below](#results).
+> **Macro-F1: student 0.840, incumbent regex 0.337.** On the same 500 headlines, the regex cannot
+> emit the `consumer` class even once. The student beats it on every one of the eight classes on
+> F1, and [loses to it on one](#where-the-student-loses) on recall, which leads rather than gets
+> buried. [Full table below](#results).
 
 [![tests](https://img.shields.io/badge/tests-pytest-1f883d)](tests/)
 [![python](https://img.shields.io/badge/python-3.12-informational)](pyproject.toml)
@@ -31,27 +44,16 @@ uv run python -m src.reproduce                  # regenerates every result and c
 
 ## What this is, in plain terms
 
-**Yes, this is a project where I actually trained a model.** Not prompted one, not called an API.
-There is no frontier model anywhere in the result path, and the thing that does the work at the end
-is a set of weights that did not exist before this repo.
-
-Here is the situation it came out of.
-
-I ship an iOS news app called **Sentinel**. It pulls in news headlines all day and has to file each
-one into one of eight buckets: geopolitics, finance, tech, sports, entertainment, science, consumer,
-general. The thing doing that filing is a keyword regex I wrote early on, basically a list of
-`if` statements that stops at the first keyword it recognises.
-
-It works well enough to ship, and it is obviously wrong once you look at it. `"Amazon Prime Day"`
-gets filed as `tech`, because the word `amazon` matches before it ever considers `consumer`. Any
-headline with the word `china` in it is `geopolitics` forever. Out of the 500 headlines I measured,
-it dumps **375 of them into `general`**, the catch-all bucket, and it never once uses `consumer`.
-
-### So what did I do about it
+The eight buckets are `geopolitics`, `finance`, `tech`, `sports`, `entertainment`, `science`,
+`consumer`, `general`. The regex is wrong in a way you can see just by reading it, rather than
+having to measure it. It stops at the first keyword it recognises, so the *order* of the `if`
+statements decides the answer: `"Amazon Prime Day"` is filed as `tech`, because `amazon` matches
+before `consumer` is ever considered. Any headline containing `china` is `geopolitics` forever.
+Anything that matches no keyword at all falls through to `general`, which is most things.
 
 The obvious fix is to call GPT or Claude on every headline. That costs money forever, adds a network
-round trip to something that has to be fast, and means the app stops working if someone else's API
-is down. So I did the other thing.
+round trip to something that has to be fast, and means the app stops working when someone else's API
+goes down. So I did the other thing.
 
 **I taught a small model to do the job, by having a big model teach it.** That technique is called
 distillation, and it goes like this:
