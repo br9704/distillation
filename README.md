@@ -519,7 +519,8 @@ gate interrupting them, which is what the plan asked for.
 
 ## License · Author
 
-MIT — see [LICENSE](LICENSE). Model weights are not committed; the teacher and base models are
-Apache-2.0 and are pulled by revision. Geist is vendored under SIL OFL-1.1.
+MIT — see [LICENSE](LICENSE). Third-party attributions are in [NOTICE.md](NOTICE.md). Model
+weights are not committed; the teacher and base models are Apache-2.0 and are pulled by
+revision. Geist is vendored under SIL OFL-1.1.
 
 Built by **Bruno Jaamaa** — [brunojaamaa.dev](https://brunojaamaa.dev) · [@br9704](https://github.com/br9704)

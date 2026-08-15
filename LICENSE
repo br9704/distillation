@@ -19,14 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Third-party assets vendored in this repository:
-
-- assets/fonts/Geist-*.ttf, assets/fonts/GeistMono-*.ttf — Geist, SIL Open Font
-  License 1.1. Full licence text in assets/fonts/LICENSE.txt.
-
-Models referenced by this project are distributed under their own licences:
-Qwen/Qwen3.5-35B-A3B and Qwen/Qwen3.5-4B are Apache-2.0. No model weights are
-committed to this repository.
