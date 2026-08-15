@@ -806,24 +806,49 @@ is above the fold-adjacent, not appended at the bottom · no amber in any chart.
 Everything requiring money, publication, or an irreversible external action lives here and
 nowhere else. S0–S8 complete without a single gate.
 
-- [ ] `ask_human` — push weights to Hugging Face?
-  - [ ] Adapter repo (few MB) with `base_model:` metadata so HF renders the lineage widget
-  - [ ] Merged weights repo
-  - [ ] Model card YAML: `license`, `base_model`, `pipeline_tag`, `tags`, `datasets`, `library_name`
-  - [ ] **Disclose the labelling source** — teacher model, revision, prompt version
-  - [ ] Requires `git-lfs` + `huggingface-cli` (not yet installed — S9 installs them)
-- [ ] `ask_human` — make the GitHub repo public?
+- [⏭] `ask_human` — push weights to Hugging Face? → **DEFERRED by Bruno, 2026-08-15.**
+      Asked and answered: "we defer it". Not declined outright, so it stays available.
+  - [⏭] Adapter repo (few MB) with `base_model:` metadata so HF renders the lineage widget
+  - [⏭] Merged weights repo — **recommended against regardless.** 7.9 GB to save a reader one
+        `mlx_lm fuse` command is a maintenance liability, not a contribution.
+  - [⏭] Model card YAML: `license`, `base_model`, `pipeline_tag`, `tags`, `datasets`, `library_name`
+  - [⏭] **Disclose the labelling source** — teacher model, revision, prompt version
+  - [⏭] Requires `git-lfs` + `huggingface-cli` — still deliberately uninstalled
+- [x] `ask_human` — make the GitHub repo public? → **APPROVED and executed, 2026-08-15.**
+      **https://github.com/br9704/distillation** — public, five commits, CI green on `macos-14`.
+      Pre-publication scan found no `.env`, no `.mcp.json`, no credentials in history, and the
+      aethereum join code correctly absent. Two fixes were required first: `LICENSE` had
+      third-party notices appended to the MIT text, so GitHub classified the repo as "Other"
+      until they were split into `NOTICE.md`; and the README still said `METHODOLOGY.md` did
+      not exist while it sat committed beside it.
 - [ ] `ask_human` — publish the labelled dataset, or keep it local? (It is derived from public
       RSS headlines, so this is a choice rather than a constraint.)
+      → **STILL OPEN — not asked in isolation, not to be inferred from the HF deferral.**
+      Recommendation on file: keep it local. `data/` being gitignored is doing useful work
+      keeping the repo reviewable, and the labels are regenerable from `src/harvest.py` +
+      `src/teacher.py`. Nothing is blocked by leaving this unanswered.
 - [ ] `ask_human` — optional paid ablation: re-label on a hosted `Qwen3.5-122B-A10B` /
       `397B-A17B` (~$5–15) to produce a **teacher-strength curve**. Strictly better story if
       approved, entirely skippable if not.
+      → **STILL OPEN.** Requires an account and API key the agent does not hold, so it cannot
+      proceed by inference in any case. **A second training seed is the better spend of the
+      same effort** — it costs nothing but local GPU time and closes the single-sample
+      limitation, which is the one gap a reviewer can legitimately attack.
 
 **Acceptance:** every gate explicitly answered by Bruno — approved or declined — and the
 answer recorded. A declined gate is a completed task, not a failure.
+— **PARTIAL: 2 of 4 answered.** Public-repo gate approved and executed; Hugging Face deferred.
+The dataset and paid-ablation gates remain genuinely unanswered and are **not** being closed by
+assumption. S9 stays open until Bruno answers them.
 
-**As-shipped delta:** _(fill at close)_
-**Deferred:** _(fill at close)_
+**As-shipped delta:** _(open — S9 is not closed)_
+- The public-repo gate is the only one that was irreversible, and it is done. Everything else
+  in S9 can still be answered either way with no rework.
+- Deferring Hugging Face costs the project one thing and only one thing: third-party
+  corroboration of the lineage (HF renders "finetuned from Qwen3.5-4B" and lists the adapter in
+  that base model's family tree). No claim in the README or METHODOLOGY depends on it.
+
+**Deferred:** _(open — S9 is not closed)_
 
 ---
 

@@ -710,3 +710,48 @@ with `aethereum status`.)
 > to Hugging Face, making the repo public, and the optional paid teacher-strength ablation.
 > Nothing has been published. No remote exists. `git-lfs` and `huggingface-cli` are still
 > uninstalled, deliberately — S9 installs them if and only if a gate is approved.
+
+---
+
+## S9 — Owner gates (in progress — 2 of 4 answered)
+
+**2026-08-15 · `ask_human` — make the GitHub repo public? → APPROVED, and executed**
+> **https://github.com/br9704/distillation** is public. Five commits, CI green on `macos-14`
+> in 32 s, licence detected as MIT.
+> **Pre-publication scan, run before the irreversible step:** no `.env`, no `.mcp.json`, no
+> credential patterns in tracked content, nothing sensitive ever added in history, and the
+> aethereum room id and join code correctly absent — the two hits that looked sensitive were
+> false positives on the word *token* (`results/token_counts.json`, `src/measure_tokens.py`,
+> both about tokeniser tokens). Every Supabase mention is a path reference or a statement that
+> the key was deliberately not used.
+> **Two defects found and fixed before publishing:** `LICENSE` was valid MIT with eleven lines
+> of third-party attribution appended, which GitHub's detector cannot parse past — the repo
+> published as licence "Other" until the notices moved to `NOTICE.md`. And the README still
+> told readers `METHODOLOGY.md` "is deliberately not written yet" while that file sat committed
+> beside it, a staleness introduced by the S8 commit itself.
+> **Disclosed to the owner:** the commit history carries `jaamaabruno@gmail.com` publicly and
+> is irreversible without a history rewrite. It matches the `br9704` GitHub identity.
+
+**2026-08-15 · `ask_human` — push weights to Hugging Face? → DEFERRED**
+> Bruno: "we defer it." Deferred rather than declined, so it stays available at any time.
+> **What deferring costs, stated plainly so the decision is on the record:** exactly one thing —
+> third-party corroboration. An adapter repo with `base_model:` metadata makes HF render
+> "finetuned from Qwen3.5-4B" and list it in that model's family tree, which is evidence of
+> training that lives somewhere other than a repo the author wrote himself. **No claim in the
+> README or `METHODOLOGY.md` depends on it**, and nothing is blocked.
+> **Recommendation on file, independent of the deferral:** if it is ever done, publish the
+> ~4 MB adapter only. The 7.9 GB merged weights save a reader a single `mlx_lm fuse` command
+> and are a maintenance liability rather than a contribution.
+> `git-lfs` and `huggingface-cli` remain deliberately uninstalled.
+
+**2026-08-15 · `ask_human` — publish the labelled dataset? → STILL OPEN**
+> Deliberately **not** inferred from the Hugging Face deferral: they are separate gates and
+> were not asked together. Recommendation on file is to keep it local — `data/` being gitignored
+> keeps the repo reviewable, and the labels regenerate from `src/harvest.py` + `src/teacher.py`.
+
+**2026-08-15 · `ask_human` — optional paid teacher-strength ablation (~$5–15)? → STILL OPEN**
+> Cannot proceed by inference in any case: it needs an account and API key the agent does not
+> hold. **Counter-recommendation:** a second training seed is the better spend. It costs only
+> local GPU time and closes the single-sample limitation — currently the one gap in the write-up
+> a reviewer can legitimately attack, since the +8.0 checkpoint-selection delta and every
+> per-class figure rest on one run.
