@@ -104,11 +104,11 @@ committed under `results/`.
 
 ## Next 5 actions
 
-- [ ] Back up `runs/current/best/adapters.safetensors` and `data/` off this machine. They are the two artefacts the remote does not have #task [project:: Distillation] [priority:: high]
-- [ ] Correct `CLAUDE.md` and the README's Status section, which still claim nothing is published and no remote exists #task [project:: Distillation] [priority:: high]
-- [ ] Answer the two open owner gates: publish the labelled dataset or keep it local, and whether to run the paid teacher-strength ablation #task [project:: Distillation]
-- [ ] Run a second training seed. It costs local GPU time only and closes the single-sample limitation, which is the one gap a reviewer can legitimately attack #task [project:: Distillation]
-- [ ] Take the six regex defects and the missing `politics` class back to the Sentinel product as actionable work #task [project:: Distillation] [priority:: high]
+- [ ] Back up `runs/current/best/adapters.safetensors` and `data/` off this machine. They are the two artefacts the remote does not have #task [project:: Distillation] [priority:: high] ^t-db0tumxq
+- [ ] Correct `CLAUDE.md` and the README's Status section, which still claim nothing is published and no remote exists #task [project:: Distillation] [priority:: high] ^t-e1p2yxtt
+- [ ] Answer the two open owner gates: publish the labelled dataset or keep it local, and whether to run the paid teacher-strength ablation #task [project:: Distillation] ^t-9zpmxnse
+- [ ] Run a second training seed. It costs local GPU time only and closes the single-sample limitation, which is the one gap a reviewer can legitimately attack #task [project:: Distillation] ^t-ri9bwb36
+- [ ] Take the six regex defects and the missing `politics` class back to the Sentinel product as actionable work #task [project:: Distillation] [priority:: high] ^t-5zqv45ew
 
 ## The ten links that matter
 

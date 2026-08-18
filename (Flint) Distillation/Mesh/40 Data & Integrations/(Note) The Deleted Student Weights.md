@@ -161,10 +161,10 @@ committed. The evidence table in the README maps claim to artefact line by line.
 
 ## What to do about it
 
-- [ ] **Back up `runs/current/best/adapters.safetensors` and all of `data/` off this machine.** Together they are **5.1 MB plus 3.67 MB**. This is the highest-value, lowest-cost action in the whole project #task [project:: Distillation] [priority:: high]
-- [ ] Reconsider the deferred Hugging Face gate for the **adapter only**, a few MB with `base_model:` metadata. It would put the one irreplaceable artefact somewhere durable and give the lineage third-party corroboration #task [project:: Distillation]
-- [ ] Fix the `.gitignore` comment that calls `data/` "regenerable". The repo's own measurements say it is not #task [project:: Distillation]
-- [ ] Do **not** re-download anything to restore `models/student-merged/` unless there is a reason to run the student again. The masterplan already recommends against keeping merged weights #task [project:: Distillation] [priority:: low]
+- [ ] **Back up `runs/current/best/adapters.safetensors` and all of `data/` off this machine.** Together they are **5.1 MB plus 3.67 MB**. This is the highest-value, lowest-cost action in the whole project #task [project:: Distillation] [priority:: high] ^t-kzisdulg
+- [ ] Reconsider the deferred Hugging Face gate for the **adapter only**, a few MB with `base_model:` metadata. It would put the one irreplaceable artefact somewhere durable and give the lineage third-party corroboration #task [project:: Distillation] ^t-hxl2pxnu
+- [ ] Fix the `.gitignore` comment that calls `data/` "regenerable". The repo's own measurements say it is not #task [project:: Distillation] ^t-c94aqaha
+- [ ] Do **not** re-download anything to restore `models/student-merged/` unless there is a reason to run the student again. The masterplan already recommends against keeping merged weights #task [project:: Distillation] [priority:: low] ^t-hq8tn6xb
 
 ## Related
 

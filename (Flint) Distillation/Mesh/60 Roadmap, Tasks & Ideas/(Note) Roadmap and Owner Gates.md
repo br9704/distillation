@@ -66,14 +66,14 @@ the **~8.5 GB base re-download** and **~64 minutes**, and nothing else.
 
 ## Tasks
 
-- [ ] Back up `runs/current/best/adapters.safetensors` (3.67 MB) and all of `data/` (5.1 MB). Neither is in git and neither can be regenerated #task [project:: Distillation] [priority:: high]
-- [ ] Correct `CLAUDE.md` and the README's Status section, both of which still say nothing is published and no remote exists #task [project:: Distillation] [priority:: high]
-- [ ] Answer the dataset-publication gate. It is a genuine choice: the corpus carries zero credentials and zero user data #task [project:: Distillation]
-- [ ] Answer the paid-ablation gate, or decline it in favour of the second seed #task [project:: Distillation]
-- [ ] Run the second training seed and publish the variance #task [project:: Distillation]
-- [ ] Fix the `.gitignore` comment claiming `data/` is regenerable. The repo's own measurements say it is not #task [project:: Distillation]
-- [ ] Take the six regex defects and the missing `politics` class back to Sentinel as product work. **The taxonomy is missing a ninth class**, and that is a real, actionable finding rather than a benchmark artefact #task [project:: Distillation] [priority:: high]
-- [ ] Verify the case-study page at `brunojaamaa.dev/projects/distillation`, which this audit did not fetch #task [project:: Distillation]
+- [ ] Back up `runs/current/best/adapters.safetensors` (3.67 MB) and all of `data/` (5.1 MB). Neither is in git and neither can be regenerated #task [project:: Distillation] [priority:: high] ^t-9woshx8j
+- [ ] Correct `CLAUDE.md` and the README's Status section, both of which still say nothing is published and no remote exists #task [project:: Distillation] [priority:: high] ^t-uihqu2dv
+- [ ] Answer the dataset-publication gate. It is a genuine choice: the corpus carries zero credentials and zero user data #task [project:: Distillation] ^t-ckkiqlfc
+- [ ] Answer the paid-ablation gate, or decline it in favour of the second seed #task [project:: Distillation] ^t-jb6uqoi2
+- [ ] Run the second training seed and publish the variance #task [project:: Distillation] ^t-j987xsvr
+- [ ] Fix the `.gitignore` comment claiming `data/` is regenerable. The repo's own measurements say it is not #task [project:: Distillation] ^t-gcdha7cs
+- [ ] Take the six regex defects and the missing `politics` class back to Sentinel as product work. **The taxonomy is missing a ninth class**, and that is a real, actionable finding rather than a benchmark artefact #task [project:: Distillation] [priority:: high] ^t-sk1o5uhp
+- [ ] Verify the case-study page at `brunojaamaa.dev/projects/distillation`, which this audit did not fetch #task [project:: Distillation] ^t-ashhf7hh
 
 ## Backlog, explicitly out of scope for this project
 
